@@ -1,9 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
-  cacheComponents: true,
-  partialPrefetching: true,
+  // Application authentifiée : toutes les pages sont rendues à la demande.
   turbopack: {
     rules: {
       "*.css": {
@@ -12,6 +10,11 @@ const nextConfig: NextConfig = {
       },
     },
   },
+  serverExternalPackages: ["exceljs"],
+  experimental: {
+    serverActions: { bodySizeLimit: "4mb" },
+  },
+  poweredByHeader: false,
 };
 
 export default nextConfig;
