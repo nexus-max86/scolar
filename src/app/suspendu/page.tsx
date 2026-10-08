@@ -13,8 +13,8 @@ export default async function SuspendedPage() {
   return (
     <main className="flex flex-1 items-center justify-center px-4">
       <Card className="max-w-md text-center">
-        <h1 className="text-lg font-bold text-red-700">Compte de l&apos;école suspendu</h1>
-        <p className="mt-2 text-sm text-gray-600">
+        <h1 className="text-lg font-semibold text-red-700">Compte de l&apos;école suspendu</h1>
+        <p className="mt-2 text-sm text-muted">
           L&apos;accès de {school.name} à ÉcoleFacile est suspendu. Vos données sont conservées. Contactez l&apos;équipe
           ÉcoleFacile pour réactiver le compte.
         </p>

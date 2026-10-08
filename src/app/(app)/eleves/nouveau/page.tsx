@@ -16,7 +16,7 @@ export default async function NewStudentPage() {
       <Card>
         <ActionForm action={createStudent}>
           <StudentFields classes={classes} />
-          <div className="flex flex-wrap gap-2 border-t border-gray-100 pt-4">
+          <div className="flex flex-wrap gap-2 border-t border-line pt-4">
             <SubmitButton>Enregistrer l&apos;élève</SubmitButton>
             <SubmitButton name="then" value="payer" variant="success" pendingText="Enregistrement…">
               Enregistrer et encaisser un paiement

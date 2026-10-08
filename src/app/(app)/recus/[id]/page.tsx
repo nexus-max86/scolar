@@ -55,56 +55,56 @@ export default async function ReceiptPage(props: PageProps<"/recus/[id]">) {
         <LinkButton href={`/eleves/${r.student_id}`} variant="ghost">Fiche de l&apos;élève</LinkButton>
       </div>
 
-      <Card className="relative overflow-hidden">
+      <Card className="print-plain relative overflow-hidden">
         {cancelled && (
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
             <span className="-rotate-12 text-6xl font-black text-red-600/25">ANNULÉ</span>
           </div>
         )}
-        <div className="flex items-center gap-3 border-b border-gray-100 pb-3">
+        <div className="flex items-center gap-3 border-b border-line pb-3">
           {r.has_logo && (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={`/api/logo/${r.school_id}`} alt="" className="h-14 w-14 object-contain" />
           )}
           <div>
-            <div className="text-lg font-bold text-brand-700">{r.school_name}</div>
-            <div className="text-xs text-gray-500">{[r.school_address, r.school_city].filter(Boolean).join(", ")}</div>
-            <div className="text-xs text-gray-500">{[r.school_phone && `Tél. ${r.school_phone}`, r.school_email].filter(Boolean).join(" · ")}</div>
+            <div className="text-base font-semibold text-ink">{r.school_name}</div>
+            <div className="text-xs text-muted">{[r.school_address, r.school_city].filter(Boolean).join(", ")}</div>
+            <div className="text-xs text-muted">{[r.school_phone && `Tél. ${r.school_phone}`, r.school_email].filter(Boolean).join(" · ")}</div>
           </div>
         </div>
         <div className="my-3 flex items-center justify-between rounded-lg bg-brand-50 px-3 py-2">
-          <span className="font-bold text-brand-700">REÇU DE PAIEMENT</span>
-          <span className="font-mono text-sm font-bold">N° {r.receipt_number}</span>
+          <span className="text-sm font-medium text-brand-700">Reçu de paiement</span>
+          <span className="font-mono text-sm font-semibold">N° {r.receipt_number}</span>
         </div>
         <dl className="text-sm">
           {rows.map(([k, v]) => (
-            <div key={k} className="flex justify-between gap-3 border-b border-gray-100 py-1.5">
-              <dt className="text-gray-500">{k}</dt>
+            <div key={k} className="flex justify-between gap-3 border-b border-line py-1.5">
+              <dt className="text-muted">{k}</dt>
               <dd className="text-right font-medium">{v}</dd>
             </div>
           ))}
         </dl>
         <div className="my-3 flex items-center justify-between rounded-lg bg-green-50 px-3 py-3">
-          <span className="font-bold text-green-800">MONTANT PAYÉ</span>
-          <span className="text-2xl font-extrabold text-green-700">{formatMoney(r.amount_cents, r.currency)}</span>
+          <span className="text-sm font-medium text-green-800">Montant payé</span>
+          <span className="text-2xl font-semibold tabular-nums text-green-800">{formatMoney(r.amount_cents, r.currency)}</span>
         </div>
         <dl className="text-sm">
           <div className="flex justify-between py-1">
-            <dt className="text-gray-500">Reste à payer sur ce frais</dt>
-            <dd className={r.fee_remaining_cents > BigInt(0) ? "font-bold text-red-700" : "font-bold text-green-700"}>
+            <dt className="text-muted">Reste à payer sur ce frais</dt>
+            <dd className={r.fee_remaining_cents > BigInt(0) ? "font-semibold text-red-700" : "font-semibold text-green-700"}>
               {r.fee_remaining_cents > BigInt(0) ? formatMoney(r.fee_remaining_cents, r.currency) : "Soldé"}
             </dd>
           </div>
           <div className="flex justify-between py-1">
-            <dt className="text-gray-500">Solde total restant ({r.currency})</dt>
-            <dd className={r.currency_remaining_cents > BigInt(0) ? "font-bold text-red-700" : "font-bold text-green-700"}>
+            <dt className="text-muted">Solde total restant ({r.currency})</dt>
+            <dd className={r.currency_remaining_cents > BigInt(0) ? "font-semibold text-red-700" : "font-semibold text-green-700"}>
               {formatMoney(r.currency_remaining_cents, r.currency)}
             </dd>
           </div>
         </dl>
-        {r.comment && <p className="mt-2 text-sm text-gray-600">Commentaire : {r.comment}</p>}
+        {r.comment && <p className="mt-2 text-sm text-muted">Commentaire : {r.comment}</p>}
         {cancelled && <p className="mt-2 text-sm font-semibold text-red-700">Paiement annulé. Motif : {r.cancel_reason}</p>}
-        <p className="mt-4 border-t border-gray-100 pt-3 text-xs text-gray-500">{r.receipt_footer || "Merci pour votre paiement. Conservez ce reçu."}</p>
+        <p className="mt-4 border-t border-line pt-3 text-xs text-muted">{r.receipt_footer || "Merci pour votre paiement. Conservez ce reçu."}</p>
       </Card>
 
       {user.role === "director" && !cancelled && (
@@ -120,7 +120,7 @@ export default async function ReceiptPage(props: PageProps<"/recus/[id]">) {
         </details>
       )}
       <p className="no-print mt-4 text-center text-sm">
-        <Link href="/paiements/nouveau" className="font-semibold text-brand-700">+ Encaisser un autre paiement</Link>
+        <Link href="/paiements/nouveau" className="font-medium text-brand-600 hover:underline">+ Encaisser un autre paiement</Link>
       </p>
     </div>
   );

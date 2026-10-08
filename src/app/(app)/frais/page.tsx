@@ -79,12 +79,12 @@ export default async function FeesPage() {
             <tr key={f.id} className="align-top">
               <Td>
                 <div className="font-semibold">{f.name}</div>
-                <div className="text-xs text-gray-500">{FEE_CATEGORIES[f.category as keyof typeof FEE_CATEGORIES]}</div>
+                <div className="text-xs text-muted">{FEE_CATEGORIES[f.category as keyof typeof FEE_CATEGORIES]}</div>
               </Td>
               <Td className="font-semibold">{formatMoney(f.amount_cents, f.currency)}</Td>
               <Td>{f.class_name ? classLabel({ name: f.class_name, section: f.class_section }) : "Toutes les classes"}</Td>
               <Td>{formatDate(f.due_date)}</Td>
-              <Td className="text-green-700">{formatMoney(f.collected, f.currency)}<div className="text-xs text-gray-500">{f.payers} élève(s)</div></Td>
+              <Td className="text-green-700">{formatMoney(f.collected, f.currency)}<div className="text-xs text-muted">{f.payers} élève(s)</div></Td>
               <Td>
                 <details>
                   <summary className="cursor-pointer text-sm font-medium text-brand-700">Modifier</summary>

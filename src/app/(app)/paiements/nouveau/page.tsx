@@ -38,16 +38,16 @@ export default async function NewPaymentPage(props: PageProps<"/paiements/nouvea
             <button className={buttonClass("primary")}>Rechercher</button>
           </form>
           {q && (
-            <ul className="mt-4 divide-y divide-gray-100">
+            <ul className="mt-4 divide-y divide-line">
               {results.map((s) => (
                 <li key={s.id}>
                   <Link href={`/paiements/nouveau?eleve=${s.id}`} className="flex min-h-12 items-center justify-between gap-3 px-2 py-2 hover:bg-gray-50">
                     <span className="font-semibold text-brand-700">{studentFullName(s)}</span>
-                    <span className="text-sm text-gray-500">{s.class_name ?? "—"} · {s.student_number}</span>
+                    <span className="text-sm text-muted">{s.class_name ?? "—"} · {s.student_number}</span>
                   </Link>
                 </li>
               ))}
-              {results.length === 0 && <li className="py-4 text-sm text-gray-500">Aucun élève actif trouvé pour « {q} ».</li>}
+              {results.length === 0 && <li className="py-4 text-sm text-muted">Aucun élève actif trouvé pour « {q} ».</li>}
             </ul>
           )}
         </Card>

@@ -13,7 +13,8 @@ export default async function LoginPage() {
 
   return (
     <Card className="w-full max-w-sm">
-      <h1 className="mb-4 text-lg font-bold">Connexion</h1>
+      <h1 className="text-lg font-semibold">Connexion à votre espace</h1>
+      <p className="mb-5 mt-1 text-sm text-muted">Directeur ou caissier : utilisez l&apos;e-mail que l&apos;école vous a donné.</p>
       <ActionForm action={login}>
         <Field label="Adresse e-mail">
           <Input name="email" type="email" autoComplete="email" required inputMode="email" />
@@ -25,9 +26,9 @@ export default async function LoginPage() {
           Se connecter
         </SubmitButton>
       </ActionForm>
-      <p className="mt-4 text-center text-sm text-gray-600">
+      <p className="mt-4 text-center text-sm text-muted">
         Nouvelle école ?{" "}
-        <Link href="/inscription" className="font-semibold text-brand-700">
+        <Link href="/inscription" className="font-medium text-brand-600">
           Inscrire mon école
         </Link>
       </p>

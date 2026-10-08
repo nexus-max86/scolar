@@ -53,10 +53,10 @@ export default async function SettingsPage() {
         <div className="space-y-4">
           <Card title="Abonnement">
             <div id="abonnement" className="space-y-2 text-sm">
-              <div className="flex justify-between"><span className="text-gray-500">Formule</span><strong>{PLANS[school.subscription_plan]}</strong></div>
-              <div className="flex justify-between"><span className="text-gray-500">Statut</span><strong>{SCHOOL_STATUS[school.status]}</strong></div>
-              <div className="flex justify-between"><span className="text-gray-500">Valable jusqu&apos;au</span><strong>{formatDate(school.subscription_end_date)}</strong></div>
-              <p className="pt-2 text-gray-600">
+              <div className="flex justify-between"><span className="text-muted">Formule</span><strong>{PLANS[school.subscription_plan]}</strong></div>
+              <div className="flex justify-between"><span className="text-muted">Statut</span><strong>{SCHOOL_STATUS[school.status]}</strong></div>
+              <div className="flex justify-between"><span className="text-muted">Valable jusqu&apos;au</span><strong>{formatDate(school.subscription_end_date)}</strong></div>
+              <p className="pt-2 text-muted">
                 Pour renouveler ou changer de formule, payez par Mobile Money et envoyez la référence à l&apos;équipe
                 ÉcoleFacile : l&apos;abonnement est prolongé le jour même.
               </p>

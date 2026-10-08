@@ -30,7 +30,7 @@ export default async function UsersPage() {
           <Field label="Mot de passe provisoire *" hint="8 caractères minimum"><Input name="password" required minLength={8} autoComplete="new-password" /></Field>
           <div className="flex items-end"><SubmitButton>Créer le compte</SubmitButton></div>
         </ActionForm>
-        <p className="mt-3 text-xs text-gray-500">
+        <p className="mt-3 text-xs text-muted">
           Le caissier peut inscrire des élèves, encaisser, imprimer les reçus et voir les impayés. Il ne peut pas modifier les
           frais, annuler un paiement ni gérer les utilisateurs.
         </p>
@@ -39,7 +39,7 @@ export default async function UsersPage() {
         <Table head={["Nom", "Rôle", "Statut", "Dernière connexion", ""]}>
           {users.map((u) => (
             <tr key={u.id} className="align-top">
-              <Td><div className="font-semibold">{u.name}</div><div className="text-xs text-gray-500">{u.email}{u.phone ? ` · ${u.phone}` : ""}</div></Td>
+              <Td><div className="font-semibold">{u.name}</div><div className="text-xs text-muted">{u.email}{u.phone ? ` · ${u.phone}` : ""}</div></Td>
               <Td>{ROLE_LABELS[u.role]}</Td>
               <Td><Badge color={u.status === "active" ? "green" : "gray"}>{u.status === "active" ? "Actif" : "Désactivé"}</Badge></Td>
               <Td>{formatDate(u.last_login_at)}</Td>

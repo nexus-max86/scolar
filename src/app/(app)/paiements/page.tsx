@@ -4,6 +4,7 @@ import { isISODate } from "@/lib/actions";
 import { PAYMENT_METHODS, formatDate, studentFullName, todayISO } from "@/lib/labels";
 import { emptyTotals, formatMoney } from "@/lib/money";
 import { listPayments, monthStartISO } from "@/lib/reports";
+import { MobileList, MobileRow } from "@/components/mobile-list";
 import { Badge, Card, Field, Input, LinkButton, PageHeader, Select, StatCard, Table, Td, buttonClass, MoneyLines } from "@/components/ui";
 
 export const metadata = { title: "Paiements" };
@@ -50,16 +51,29 @@ export default async function PaymentsPage(props: PageProps<"/paiements">) {
         <StatCard label={`Total encaissé du ${formatDate(from)} au ${formatDate(to)}`} value={<MoneyLines totals={totals} />} tone="green" />
         <StatCard label="Nombre de paiements" value={valid} hint={payments.length > valid ? `${payments.length - valid} annulé(s) non comptés` : undefined} />
       </div>
-      <Card className="p-0 sm:p-0">
+      <Card className="overflow-hidden p-0 sm:p-0">
+        <MobileList empty="Aucun paiement sur cette période.">
+          {payments.map((p) => (
+            <MobileRow
+              key={p.id}
+              href={`/recus/${p.id}`}
+              title={studentFullName(p)}
+              subtitle={`${formatDate(p.payment_date)} · ${p.fee_name}`}
+              right={<span className={p.status === "cancelled" ? "text-muted line-through" : "text-green-800"}>{formatMoney(p.amount_cents, p.currency)}</span>}
+              rightSub={p.status === "cancelled" ? <Badge color="red">Annulé</Badge> : <span className="text-muted">{PAYMENT_METHODS[p.payment_method]}</span>}
+            />
+          ))}
+        </MobileList>
+        <div className="hidden sm:block">
         <Table head={["Date", "Reçu", "Élève", "Frais", "Montant", "Moyen", "Agent"]} empty="Aucun paiement sur cette période.">
           {payments.map((p) => (
             <tr key={p.id} className={p.status === "cancelled" ? "text-gray-400" : ""}>
               <Td>{formatDate(p.payment_date)}</Td>
               <Td>
-                <Link href={`/recus/${p.id}`} className="font-mono text-xs text-brand-700 hover:underline">{p.receipt_number}</Link>
+                <Link href={`/recus/${p.id}`} className="font-mono text-xs text-brand-600 hover:underline">{p.receipt_number}</Link>
                 {p.status === "cancelled" && <span className="ml-2"><Badge color="red">Annulé</Badge></span>}
               </Td>
-              <Td><Link href={`/eleves/${p.student_id}`} className="hover:underline">{studentFullName(p)}</Link><div className="text-xs text-gray-500">{p.class_name ?? "—"}</div></Td>
+              <Td><Link href={`/eleves/${p.student_id}`} className="hover:underline">{studentFullName(p)}</Link><div className="text-xs text-muted">{p.class_name ?? "—"}</div></Td>
               <Td>{p.fee_name}</Td>
               <Td className={p.status === "cancelled" ? "line-through" : "font-semibold text-green-700"}>{formatMoney(p.amount_cents, p.currency)}</Td>
               <Td>{PAYMENT_METHODS[p.payment_method]}</Td>
@@ -67,8 +81,9 @@ export default async function PaymentsPage(props: PageProps<"/paiements">) {
             </tr>
           ))}
         </Table>
+        </div>
       </Card>
-      {payments.length === 500 && <p className="mt-2 text-center text-xs text-gray-500">500 paiements affichés au maximum : réduisez la période ou utilisez l&apos;export Excel.</p>}
+      {payments.length === 500 && <p className="mt-2 text-center text-xs text-muted">500 paiements affichés au maximum : réduisez la période ou utilisez l&apos;export Excel.</p>}
     </>
   );
 }

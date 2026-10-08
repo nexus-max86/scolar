@@ -3,7 +3,7 @@ import { sql } from "@/lib/db";
 import { PLANS, SCHOOL_STATUS, formatDate, todayISO } from "@/lib/labels";
 import { formatMoney } from "@/lib/money";
 import { ActionForm, SubmitButton } from "@/components/forms";
-import { Badge, Card, Field, Input, PageHeader, Select, StatCard, Table, Td } from "@/components/ui";
+import { Wordmark, Badge, Card, Field, Input, PageHeader, Select, StatCard, Table, Td } from "@/components/ui";
 import { logout } from "../(auth)/actions";
 import { updateSubscription } from "./actions";
 
@@ -33,9 +33,9 @@ export default async function AdminPage() {
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-6">
       <div className="mb-6 flex items-center justify-between">
-        <div className="text-xl font-extrabold text-brand-700">ÉcoleFacile <span className="text-gray-900">Admin</span></div>
+        <Wordmark />
         <form action={logout} className="flex items-center gap-3 text-sm">
-          <span className="text-gray-600">{admin.name}</span>
+          <span className="text-muted">{admin.name}</span>
           <button className="rounded-lg border border-gray-300 bg-white px-3 py-2">Se déconnecter</button>
         </form>
       </div>
@@ -53,8 +53,8 @@ export default async function AdminPage() {
             const expired = end !== null && end < today;
             return (
               <tr key={s.id} className="align-top">
-                <Td><div className="font-semibold">{s.name}</div><div className="text-xs text-gray-500">{s.city ?? "—"} · {s.director_name ?? "—"} · {s.phone ?? ""}</div><div className="text-xs text-gray-400">Inscrite le {formatDate(s.created_at)}</div></Td>
-                <Td>{s.students}<div className="text-xs text-gray-500">{s.users} utilisateur(s)</div></Td>
+                <Td><div className="font-semibold">{s.name}</div><div className="text-xs text-muted">{s.city ?? "—"} · {s.director_name ?? "—"} · {s.phone ?? ""}</div><div className="text-xs text-gray-400">Inscrite le {formatDate(s.created_at)}</div></Td>
+                <Td>{s.students}<div className="text-xs text-muted">{s.users} utilisateur(s)</div></Td>
                 <Td><Badge color={s.status === "suspended" ? "red" : s.status === "trial" ? "orange" : "green"}>{SCHOOL_STATUS[s.status]}</Badge></Td>
                 <Td>{PLANS[s.subscription_plan]}</Td>
                 <Td className={expired ? "font-semibold text-red-700" : ""}>{formatDate(s.subscription_end_date)}{expired && " (expiré)"}</Td>

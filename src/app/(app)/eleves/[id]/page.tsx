@@ -91,8 +91,8 @@ export default async function StudentPage(props: PageProps<"/eleves/[id]">) {
               ["Adresse", student.address ?? "—"],
               ["Inscrit le", formatDate(student.enrolled_at)],
             ].map(([k, v]) => (
-              <div key={k} className="flex justify-between gap-3 border-b border-gray-100 pb-2">
-                <dt className="text-gray-500">{k}</dt>
+              <div key={k} className="flex justify-between gap-3 border-b border-line pb-2">
+                <dt className="text-muted">{k}</dt>
                 <dd className="text-right font-medium">{v}</dd>
               </div>
             ))}
@@ -117,7 +117,7 @@ export default async function StudentPage(props: PageProps<"/eleves/[id]">) {
           {payments.map((p) => (
             <tr key={p.id} className={p.status === "cancelled" ? "text-gray-400 line-through" : ""}>
               <Td>{formatDate(p.payment_date)}</Td>
-              <Td><Link className="font-mono text-xs text-brand-700 hover:underline" href={`/recus/${p.id}`}>{p.receipt_number}</Link></Td>
+              <Td><Link className="font-mono text-xs text-brand-600 hover:underline" href={`/recus/${p.id}`}>{p.receipt_number}</Link></Td>
               <Td>{p.fee_name}</Td>
               <Td className="font-semibold">{formatMoney(p.amount_cents, p.currency)}</Td>
               <Td>{PAYMENT_METHODS[p.payment_method]}</Td>

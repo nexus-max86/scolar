@@ -31,7 +31,7 @@ export default async function ClassesPage() {
             <div className="mb-3 flex items-start justify-between gap-2">
               <div>
                 <div className="font-semibold text-gray-900">{c.name}</div>
-                <div className="text-xs text-gray-500">{c.section ?? "Sans section"}</div>
+                <div className="text-xs text-muted">{c.section ?? "Sans section"}</div>
               </div>
               <Link href={`/eleves?classe=${c.id}`} className="rounded-full bg-brand-50 px-3 py-1 text-sm font-semibold text-brand-700">
                 {c.students} élève{c.students > 1 ? "s" : ""}
@@ -54,7 +54,7 @@ export default async function ClassesPage() {
           </Card>
         ))}
       </div>
-      {classes.length === 0 && <p className="text-center text-sm text-gray-500">Aucune classe. Créez la première ci-dessus, ou importez vos élèves depuis Excel.</p>}
+      {classes.length === 0 && <p className="text-center text-sm text-muted">Aucune classe. Créez la première ci-dessus, ou importez vos élèves depuis Excel.</p>}
     </>
   );
 }

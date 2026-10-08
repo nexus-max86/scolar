@@ -6,6 +6,7 @@ import { studentFullName } from "@/lib/labels";
 import { emptyTotals, formatMoney, formatTotals } from "@/lib/money";
 import { whatsAppLink } from "@/lib/phone";
 import { unpaidStudents } from "@/lib/unpaid";
+import { MobileList, MobileRow } from "@/components/mobile-list";
 import { Card, PageHeader, Select, StatCard, Table, Td, buttonClass, MoneyLines } from "@/components/ui";
 
 export const metadata = { title: "Impayés" };
@@ -51,7 +52,20 @@ export default async function UnpaidPage(props: PageProps<"/impayes">) {
         <StatCard label="Total restant à percevoir" value={<MoneyLines totals={total} />} tone="red" />
         <StatCard label="Élèves concernés" value={rows.length} tone="orange" />
       </div>
-      <Card className="p-0 sm:p-0">
+      <Card className="overflow-hidden p-0 sm:p-0">
+        <MobileList empty="Aucun impayé. Bravo !">
+          {rows.map((r) => (
+            <MobileRow
+              key={r.id}
+              href={`/eleves/${r.id}`}
+              title={studentFullName(r)}
+              subtitle={`${r.class_name ?? "Sans classe"}${r.parent_phone ? " · " + r.parent_phone : ""}`}
+              right={<span className="text-red-700"><MoneyLines totals={r.remaining} /></span>}
+              rightSub={<span className="text-muted">payé {formatTotals(r.paid)}</span>}
+            />
+          ))}
+        </MobileList>
+        <div className="hidden sm:block">
         <Table head={["Élève", "Classe", "Déjà payé", "Reste à payer", "Parent", "Rappel"]} empty="Aucun impayé. Bravo !">
           {rows.map((r) => {
             const msg =
@@ -59,14 +73,14 @@ export default async function UnpaidPage(props: PageProps<"/impayes">) {
               `à payer pour ${studentFullName(r)} (${r.class_name ?? ""}). Merci de passer à la caisse ou de payer par Mobile Money.`;
             return (
               <tr key={r.id}>
-                <Td><Link href={`/eleves/${r.id}`} className="font-semibold text-brand-700 hover:underline">{studentFullName(r)}</Link><div className="text-xs text-gray-500">{r.student_number}</div></Td>
+                <Td><Link href={`/eleves/${r.id}`} className="font-medium text-ink hover:text-brand-600">{studentFullName(r)}</Link><div className="text-xs text-muted">{r.student_number}</div></Td>
                 <Td>{r.class_name ?? "—"}</Td>
                 <Td className="text-green-700">{formatTotals(r.paid)}</Td>
-                <Td className="font-bold text-red-700">
+                <Td className="font-semibold text-red-700">
                   {r.remaining.USD > BigInt(0) && <div>{formatMoney(r.remaining.USD, "USD")}</div>}
                   {r.remaining.CDF > BigInt(0) && <div>{formatMoney(r.remaining.CDF, "CDF")}</div>}
                 </Td>
-                <Td>{r.parent_name ?? "—"}<div className="text-xs text-gray-500">{r.parent_phone ?? ""}</div></Td>
+                <Td>{r.parent_name ?? "—"}<div className="text-xs text-muted">{r.parent_phone ?? ""}</div></Td>
                 <Td>
                   {r.parent_phone ? (
                     <a href={whatsAppLink(r.parent_phone, msg)} target="_blank" rel="noopener" className="font-semibold text-green-700 hover:underline">WhatsApp</a>
@@ -76,6 +90,7 @@ export default async function UnpaidPage(props: PageProps<"/impayes">) {
             );
           })}
         </Table>
+        </div>
       </Card>
     </>
   );

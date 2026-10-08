@@ -14,11 +14,11 @@ function defaultAcademicYear() {
 export default function RegisterPage() {
   return (
     <Card className="w-full max-w-2xl">
-      <h1 className="text-lg font-bold">Inscrire mon école</h1>
-      <p className="mb-4 text-sm text-gray-600">30 jours d&apos;essai gratuit, sans engagement.</p>
+      <h1 className="text-lg font-semibold">Créer l&apos;espace de votre école</h1>
+      <p className="mb-6 mt-1 text-sm text-muted">30 jours d&apos;essai gratuit, sans engagement. Le logo et les autres détails peuvent être ajoutés plus tard.</p>
       <ActionForm action={registerSchool}>
         <fieldset className="grid gap-4 sm:grid-cols-2">
-          <legend className="mb-2 text-sm font-semibold text-brand-700">L&apos;école</legend>
+          <legend className="mb-2 text-sm font-semibold text-ink">L&apos;école</legend>
           <Field label="Nom de l'école *" className="sm:col-span-2">
             <Input name="school_name" required placeholder="Complexe scolaire La Victoire" />
           </Field>
@@ -41,8 +41,8 @@ export default function RegisterPage() {
             <Input name="logo" type="file" accept="image/png,image/jpeg,image/webp" />
           </Field>
         </fieldset>
-        <fieldset className="grid gap-4 border-t border-gray-100 pt-4 sm:grid-cols-2">
-          <legend className="mb-2 text-sm font-semibold text-brand-700">Le directeur (compte principal)</legend>
+        <fieldset className="grid gap-4 border-t border-line pt-4 sm:grid-cols-2">
+          <legend className="mb-2 text-sm font-semibold text-ink">Le directeur (compte principal)</legend>
           <Field label="Nom du directeur *">
             <Input name="director_name" required autoComplete="name" />
           </Field>
@@ -60,9 +60,9 @@ export default function RegisterPage() {
           Créer l&apos;espace de mon école
         </SubmitButton>
       </ActionForm>
-      <p className="mt-4 text-center text-sm text-gray-600">
+      <p className="mt-4 text-center text-sm text-muted">
         Déjà inscrit ?{" "}
-        <Link href="/connexion" className="font-semibold text-brand-700">
+        <Link href="/connexion" className="font-medium text-brand-600">
           Se connecter
         </Link>
       </p>

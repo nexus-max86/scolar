@@ -24,7 +24,7 @@ export default async function EditStudentPage(props: PageProps<"/eleves/[id]/mod
       <Card>
         <ActionForm action={updateStudent}>
           <StudentFields classes={classes} defaults={student as never} edit />
-          <div className="flex gap-2 border-t border-gray-100 pt-4">
+          <div className="flex gap-2 border-t border-line pt-4">
             <SubmitButton>Enregistrer les modifications</SubmitButton>
             <LinkButton href={`/eleves/${id}`} variant="secondary">
               Annuler
