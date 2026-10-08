@@ -179,14 +179,23 @@ export function MoneyLines({ totals }: { totals: Totals }) {
   );
 }
 
-/** Logo texte de Scolar. */
+/** Symbole Scolar : un « S » tracé d'un seul trait, avec le point vert du paiement reçu. */
+export function LogoMark({ size = 28, className }: { size?: number; className?: string }) {
+  return (
+    <svg viewBox="0 0 64 64" width={size} height={size} className={className} aria-hidden>
+      <rect width="64" height="64" rx="15" fill="#1f5296" />
+      <path d="M40 17H27a7.5 7.5 0 0 0 0 15h10a7.5 7.5 0 0 1 0 15H20" fill="none" stroke="#fff" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="46.5" cy="17" r="3.4" fill="#44c27a" />
+    </svg>
+  );
+}
+
+/** Logo complet : symbole + nom. */
 export function Wordmark({ className }: { className?: string }) {
   return (
-    <span className={cx("inline-flex items-center gap-2 font-semibold tracking-tight text-ink", className)}>
-      <span className="flex h-7 w-7 items-center justify-center rounded-md bg-brand-600 text-[13px] font-bold text-white">S</span>
-      <span>
-        Scolar
-      </span>
+    <span className={cx("inline-flex items-center gap-2 text-[19px] font-semibold tracking-[-0.03em] text-ink", className)}>
+      <LogoMark />
+      scolar
     </span>
   );
 }
