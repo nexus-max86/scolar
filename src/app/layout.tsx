@@ -3,7 +3,7 @@ import { OfflineBanner } from "@/components/offline-banner";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: { default: "ÉcoleFacile RDC", template: "%s · ÉcoleFacile RDC" },
+  title: { default: "Scolar", template: "%s · Scolar" },
   description: "Gestion simple des élèves, des frais scolaires et des paiements pour les écoles privées en RDC.",
 };
 

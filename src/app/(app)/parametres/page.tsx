@@ -58,7 +58,7 @@ export default async function SettingsPage() {
               <div className="flex justify-between"><span className="text-muted">Valable jusqu&apos;au</span><strong>{formatDate(school.subscription_end_date)}</strong></div>
               <p className="pt-2 text-muted">
                 Pour renouveler ou changer de formule, payez par Mobile Money et envoyez la référence à l&apos;équipe
-                ÉcoleFacile : l&apos;abonnement est prolongé le jour même.
+                Scolar : l&apos;abonnement est prolongé le jour même.
               </p>
             </div>
           </Card>

@@ -71,7 +71,7 @@ export default async function Home() {
               Sachez chaque soir ce qui est rentré dans la caisse.
             </h1>
             <p className="mt-5 max-w-lg text-[17px] leading-relaxed text-muted">
-              ÉcoleFacile remplace le cahier de caisse et les carnets de reçus : chaque paiement est enregistré, chaque
+              Scolar remplace le cahier de caisse et les carnets de reçus : chaque paiement est enregistré, chaque
               élève a son solde, et vous voyez qui doit encore combien.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -118,7 +118,7 @@ export default async function Home() {
 
       <footer className="border-t border-line">
         <div className="mx-auto flex max-w-5xl flex-col gap-2 px-4 py-6 text-sm text-muted sm:flex-row sm:justify-between sm:px-6">
-          <span>© {new Date().getFullYear()} ÉcoleFacile RDC · Kinshasa</span>
+          <span>© {new Date().getFullYear()} Scolar · Kinshasa</span>
           <Link href="/connexion" className="hover:text-ink">Espace école</Link>
         </div>
       </footer>

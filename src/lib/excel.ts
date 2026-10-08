@@ -11,7 +11,7 @@ export async function excelResponse(
   title?: string,
 ) {
   const wb = new ExcelJS.Workbook();
-  wb.creator = "ÉcoleFacile RDC";
+  wb.creator = "Scolar";
   const ws = wb.addWorksheet(sheetName);
   let headerRow = 1;
   if (title) {

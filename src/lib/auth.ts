@@ -117,7 +117,7 @@ export async function requireWriteAccess(roles: Role[] = ["director", "cashier"]
   const ctx = await requireSchoolUser(roles);
   if (ctx.expired) {
     throw new AccessError(
-      "L'abonnement de l'école a expiré. Les données restent consultables ; contactez ÉcoleFacile pour le renouveler.",
+      "L'abonnement de l'école a expiré. Les données restent consultables ; contactez Scolar pour le renouveler.",
     );
   }
   return ctx;

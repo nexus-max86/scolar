@@ -179,13 +179,13 @@ export function MoneyLines({ totals }: { totals: Totals }) {
   );
 }
 
-/** Logo texte d'ÉcoleFacile. */
+/** Logo texte de Scolar. */
 export function Wordmark({ className }: { className?: string }) {
   return (
     <span className={cx("inline-flex items-center gap-2 font-semibold tracking-tight text-ink", className)}>
-      <span className="flex h-7 w-7 items-center justify-center rounded-md bg-brand-600 text-[13px] font-bold text-white">É</span>
+      <span className="flex h-7 w-7 items-center justify-center rounded-md bg-brand-600 text-[13px] font-bold text-white">S</span>
       <span>
-        ÉcoleFacile<span className="font-normal text-muted"> RDC</span>
+        Scolar
       </span>
     </span>
   );

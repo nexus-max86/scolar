@@ -20,7 +20,7 @@ const DARK = rgb(0.07, 0.09, 0.15);
 export async function receiptPdf(r: Receipt, logo: { data: Buffer; mime: string } | null): Promise<Uint8Array> {
   const pdf = await PDFDocument.create();
   pdf.setTitle(`Reçu ${r.receipt_number}`);
-  pdf.setProducer("ÉcoleFacile RDC");
+  pdf.setProducer("Scolar");
   const page = pdf.addPage([420, 595]); // A5
   const font = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
@@ -105,7 +105,7 @@ export async function receiptPdf(r: Receipt, logo: { data: Buffer; mime: string 
 
   const footer = r.receipt_footer || "Merci pour votre paiement. Conservez ce reçu.";
   text(page, footer.slice(0, 90), margin, 48, 8, font, GRAY);
-  text(page, `Émis le ${formatDate(r.created_at)} via ÉcoleFacile RDC`, margin, 36, 7, font, GRAY);
+  text(page, `Émis le ${formatDate(r.created_at)} via Scolar`, margin, 36, 7, font, GRAY);
 
   return pdf.save();
 }

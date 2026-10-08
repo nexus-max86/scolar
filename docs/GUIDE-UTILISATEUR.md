@@ -1,4 +1,4 @@
-# Guide d'utilisation — ÉcoleFacile RDC
+# Guide d'utilisation — Scolar
 
 Ce guide s'adresse au directeur et au secrétaire/caissier d'une école.
 

@@ -1,4 +1,4 @@
--- ÉcoleFacile RDC : schéma initial (MVP)
+-- Scolar : schéma initial (MVP)
 -- Toutes les tables métier portent school_id : chaque école ne voit que ses données.
 -- Les montants sont stockés en centimes (bigint) pour des calculs exacts.
 

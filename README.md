@@ -1,4 +1,4 @@
-# ÉcoleFacile RDC
+# Scolar
 
 Plateforme SaaS de gestion scolaire pour les écoles privées de la RDC. Cette première version (MVP) couvre le cœur
 « argent » de l'école : élèves, classes, frais scolaires, encaissements, reçus numérotés, impayés et caisse du jour.
@@ -39,11 +39,11 @@ Next.js 16 (App Router, Server Actions) · React 19 · TypeScript · Tailwind CS
 Prérequis : Node.js 20.9 ou plus récent, PostgreSQL 14 ou plus récent.
 
 ```bash
-git clone <url-du-depot> ecolefacile-rdc
-cd ecolefacile-rdc
+git clone <url-du-depot> scolar
+cd scolar
 npm install
 cp .env.example .env        # puis renseignez DATABASE_URL et AUTH_SECRET
-createdb ecolefacile        # ou créez la base avec votre outil habituel
+createdb scolar        # ou créez la base avec votre outil habituel
 npm run db:migrate          # crée les tables
 npm run db:seed             # facultatif : données de démonstration
 npm run dev                 # http://localhost:3000
@@ -53,7 +53,7 @@ Comptes de démonstration créés par `npm run db:seed` :
 
 | Rôle | E-mail | Mot de passe |
 | --- | --- | --- |
-| Administrateur plateforme | admin@ecolefacile.cd | Admin1234! |
+| Administrateur plateforme | admin@scolar.cd | Admin1234! |
 | Directeur (Complexe Scolaire La Victoire) | directeur@demo.cd | Demo1234! |
 | Caissier | caisse@demo.cd | Demo1234! |
 

@@ -35,7 +35,7 @@ async function main() {
     await tx`delete from schools where id in (select school_id from users where lower(email) = any(${DEMO_EMAILS}))`;
     await tx`
       insert into users (name, email, password_hash, role)
-      values ('Équipe ÉcoleFacile', 'admin@ecolefacile.cd', ${adminHash}, 'super_admin')
+      values ('Équipe Scolar', 'admin@scolar.cd', ${adminHash}, 'super_admin')
       on conflict (lower(email)) do update set password_hash = excluded.password_hash`;
 
     const [school] = await tx<{ id: string }[]>`
@@ -128,7 +128,7 @@ async function main() {
 
   console.log(`
 Comptes de démonstration :
-  Administrateur plateforme : admin@ecolefacile.cd / Admin1234!
+  Administrateur plateforme : admin@scolar.cd / Admin1234!
   Directeur                 : directeur@demo.cd    / Demo1234!
   Caissier                  : caisse@demo.cd       / Demo1234!`);
   await sql.end();

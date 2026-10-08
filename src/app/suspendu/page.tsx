@@ -15,8 +15,8 @@ export default async function SuspendedPage() {
       <Card className="max-w-md text-center">
         <h1 className="text-lg font-semibold text-red-700">Compte de l&apos;école suspendu</h1>
         <p className="mt-2 text-sm text-muted">
-          L&apos;accès de {school.name} à ÉcoleFacile est suspendu. Vos données sont conservées. Contactez l&apos;équipe
-          ÉcoleFacile pour réactiver le compte.
+          L&apos;accès de {school.name} à Scolar est suspendu. Vos données sont conservées. Contactez l&apos;équipe
+          Scolar pour réactiver le compte.
         </p>
         <form action={logout} className="mt-4">
           <button className="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-semibold">Se déconnecter</button>
