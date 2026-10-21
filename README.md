@@ -15,10 +15,11 @@ Plateforme SaaS de gestion scolaire pour les écoles privées de la RDC. Cette p
 | Inscription d'une école | Formulaire (nom, adresse, ville, téléphone, e-mail, directeur, logo, année scolaire), création automatique de l'espace et du compte directeur, 30 jours d'essai. |
 | Élèves | Ajout, modification, archivage/transfert/réactivation, recherche par nom, matricule ou téléphone, matricule automatique, **import Excel** avec modèle, export Excel. |
 | Classes | Création, modification, section/option, nombre d'élèves, suppression d'une classe vide. |
-| Frais scolaires | Inscription, minerval, mensuels (génération automatique de septembre à juin), transport, examen, autres. Par classe ou pour toute l'école, en USD ou CDF, date limite. |
+| Frais scolaires | Inscription, minerval, mensuels (génération automatique de septembre à juin), transport, examen, autres. Par classe ou pour toute l'école, en USD ou CDF, date limite. Frais **optionnels** (transport, cantine) dus seulement par les élèves inscrits. **Réductions et exemptions** par élève avec motif. |
 | Paiements | Espèces, Airtel Money, M-Pesa, Orange Money, virement, autre. Montant pré-rempli avec le reste à payer, refus des trop-perçus, verrou contre les doubles encaissements simultanés. Annulation (jamais de suppression) réservée au directeur, avec motif. |
 | Reçus | Numéro unique par école (ex. `LV-2026-000123`), logo et coordonnées, solde restant au moment du paiement, PDF, impression, message WhatsApp pré-rempli au parent. |
-| Impayés | Liste par classe, option « date limite dépassée », rappel WhatsApp par élève, export Excel. |
+| Impayés | Liste par classe, option « date limite dépassée », bouton Encaisser, rappel WhatsApp avec le lien parent, export Excel. |
+| Espace parent | Lien personnel par élève (`/p/<code>`), sans compte : solde, prochain paiement, retards, reçus PDF, frères et sœurs. Le directeur peut changer le lien. Non indexé par les moteurs de recherche. |
 | Caisse du jour | Totaux par devise, par moyen de paiement et par agent ; le caissier voit sa caisse, le directeur celle de l'école. Impression et export. |
 | Tableau de bord | Élèves, classes, encaissé, reste à percevoir, encaissé du jour, paiements par mois, élèves par classe, derniers paiements et inscriptions, alertes. |
 | Utilisateurs | Le directeur crée des comptes caissier ou directeur, les désactive, change leur mot de passe. |
@@ -26,7 +27,7 @@ Plateforme SaaS de gestion scolaire pour les écoles privées de la RDC. Cette p
 | Administration | Statistiques globales, liste des écoles, changement de statut, de formule et de date de fin. |
 | Journal d'audit | Connexions, créations, modifications, paiements et annulations dans `audit_logs`. |
 
-Prévu pour la suite (le schéma et les rôles sont prêts) : présences, notes et bulletins, espace parent et enseignant, SMS,
+Prévu pour la suite (le schéma et les rôles sont prêts) : présences, notes et bulletins, espace enseignant, SMS, paiement réparti sur plusieurs frais, passage à l'année suivante,
 paiement en ligne Mobile Money, saisie hors ligne.
 
 ## Technologies

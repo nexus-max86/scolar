@@ -2,7 +2,7 @@ import Link from "next/link";
 import { requireSchoolUser } from "@/lib/auth";
 import { sql } from "@/lib/db";
 import { PAYMENT_METHODS, formatDate, studentFullName, todayISO } from "@/lib/labels";
-import { emptyTotals, formatMoney, type Currency } from "@/lib/money";
+import { formatTotals, emptyTotals, formatMoney, type Currency } from "@/lib/money";
 import { schoolBalances, sumTotals } from "@/lib/finance";
 import { listPayments } from "@/lib/reports";
 import { BarChart } from "@/components/bar-chart";
@@ -18,13 +18,14 @@ export default async function DashboardPage(props: PageProps<"/tableau-de-bord">
   const { user, school } = await requireSchoolUser();
   const today = todayISO();
 
-  const [[counts], balances, todayPayments, monthly, perClass, recentStudents, recentPayments] = await Promise.all([
+  const [[counts], balances, overdue, todayPayments, monthly, perClass, recentStudents, recentPayments] = await Promise.all([
     sql<{ students: number; classes: number; staff: number; fees: number }[]>`
       select (select count(*) from students where school_id = ${school.id} and status = 'active')::int as students,
              (select count(*) from classes where school_id = ${school.id} and academic_year = ${school.academic_year})::int as classes,
              (select count(*) from users where school_id = ${school.id} and status = 'active')::int as staff,
              (select count(*) from fees where school_id = ${school.id} and academic_year = ${school.academic_year} and not archived)::int as fees`,
     schoolBalances(school.id, school.academic_year),
+    schoolBalances(school.id, school.academic_year, { overdueOnly: true }),
     listPayments(school.id, { from: today, to: today }),
     sql<{ month: string; currency: Currency; total: bigint }[]>`
       select to_char(payment_date, 'YYYY-MM') as month, currency, sum(amount_cents)::bigint as total
@@ -49,6 +50,9 @@ export default async function DashboardPage(props: PageProps<"/tableau-de-bord">
   const todayTotal = emptyTotals();
   for (const p of todayValid) todayTotal[p.currency] += p.amount_cents;
   const debtors = new Set(balances.filter((b) => b.remaining_cents > BigInt(0)).map((b) => b.student_id)).size;
+
+  const lateIds = new Set(overdue.filter((b) => b.remaining_cents > BigInt(0)).map((b) => b.student_id));
+  const lateTotal = sumTotals(overdue, "remaining_cents");
 
   const months: string[] = [];
   const base = new Date(`${today.slice(0, 7)}-01T00:00:00Z`);
@@ -84,6 +88,15 @@ export default async function DashboardPage(props: PageProps<"/tableau-de-bord">
             { done: school.has_logo, label: "Ajouter le logo de l'école", detail: "Il apparaîtra sur chaque reçu.", href: "/parametres", cta: "Ajouter" },
           ]}
         />
+      )}
+
+      {lateIds.size > 0 && (
+        <Link href="/impayes?echus=1" className="mb-4 flex items-center justify-between gap-3 rounded-[var(--radius-card)] border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 transition-colors hover:border-amber-300">
+          <span>
+            <strong>{lateIds.size} élève{lateIds.size > 1 ? "s" : ""} en retard</strong> de paiement (date limite dépassée) : {formatTotals(lateTotal)}.
+          </span>
+          <span className="shrink-0 font-semibold">Relancer les parents →</span>
+        </Link>
       )}
 
       <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">

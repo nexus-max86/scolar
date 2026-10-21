@@ -22,7 +22,8 @@ function readFee(formData: FormData) {
   if (currency !== "USD" && currency !== "CDF") throw new UserError("Choisissez la devise : USD ou CDF.");
   if (dueDate && !isISODate(dueDate)) throw new UserError("La date limite n'est pas valide.");
   if (classId && !isUuid(classId)) throw new UserError("Classe invalide.");
-  return { name, category, amount, currency, dueDate, classId };
+  const optional = formData.get("optional") === "on";
+  return { name, category, amount, currency, dueDate, classId, optional };
 }
 
 export const createFee = formAction(async (_prev, formData) => {
@@ -48,9 +49,9 @@ export const createFee = formAction(async (_prev, formData) => {
   await sql.begin(async (tx) => {
     for (const item of items) {
       const [row] = await tx<{ id: string }[]>`
-        insert into fees (school_id, name, category, amount_cents, currency, academic_year, due_date, class_id)
+        insert into fees (school_id, name, category, amount_cents, currency, academic_year, due_date, class_id, optional)
         values (${school.id}, ${item.name}, ${fee.category}, ${fee.amount.toString()}, ${fee.currency},
-                ${school.academic_year}, ${item.due}, ${fee.classId}) returning id`;
+                ${school.academic_year}, ${item.due}, ${fee.classId}, ${fee.optional}) returning id`;
       await audit({ schoolId: school.id, userId: user.id, action: "creation_frais", table: "fees", recordId: row.id }, tx);
     }
   });
@@ -70,7 +71,7 @@ export const updateFee = formAction(async (_prev, formData) => {
     ? await sql`update fees set name = ${fee.name}, due_date = ${fee.dueDate} where id = ${id} and school_id = ${school.id}`
     : await sql`
         update fees set name = ${fee.name}, category = ${fee.category}, amount_cents = ${fee.amount.toString()},
-          currency = ${fee.currency}, due_date = ${fee.dueDate}, class_id = ${fee.classId}
+          currency = ${fee.currency}, due_date = ${fee.dueDate}, class_id = ${fee.classId}, optional = ${fee.optional}
         where id = ${id} and school_id = ${school.id}`;
   if (r.count === 0) throw new UserError("Frais introuvable.");
   await audit({ schoolId: school.id, userId: user.id, action: "modification_frais", table: "fees", recordId: id });

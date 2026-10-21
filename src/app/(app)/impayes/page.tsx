@@ -5,6 +5,7 @@ import { classLabel, classOptions } from "@/lib/students";
 import { studentFullName } from "@/lib/labels";
 import { emptyTotals, formatMoney, formatTotals } from "@/lib/money";
 import { whatsAppLink } from "@/lib/phone";
+import { appUrl } from "@/lib/app-url";
 import { unpaidStudents } from "@/lib/unpaid";
 import { MobileList, MobileRow } from "@/components/mobile-list";
 import { Card, PageHeader, Select, StatCard, Table, Td, buttonClass, MoneyLines } from "@/components/ui";
@@ -26,6 +27,7 @@ export default async function UnpaidPage(props: PageProps<"/impayes">) {
     total.USD += r.remaining.USD;
     total.CDF += r.remaining.CDF;
   }
+  const base = await appUrl();
   const qs = new URLSearchParams({ classe: classId, echus: overdueOnly ? "1" : "" }).toString();
 
   return (
@@ -66,11 +68,12 @@ export default async function UnpaidPage(props: PageProps<"/impayes">) {
           ))}
         </MobileList>
         <div className="hidden sm:block">
-        <Table head={["Élève", "Classe", "Déjà payé", "Reste à payer", "Parent", "Rappel"]} empty="Aucun impayé. Bravo !">
+        <Table head={["Élève", "Classe", "Déjà payé", "Reste à payer", "Parent", "Actions"]} empty="Aucun impayé. Bravo !">
           {rows.map((r) => {
             const msg =
               `Bonjour ${r.parent_name ?? ""}, ${school.name} vous rappelle qu'il reste ${formatTotals(r.remaining)} ` +
-              `à payer pour ${studentFullName(r)} (${r.class_name ?? ""}). Merci de passer à la caisse ou de payer par Mobile Money.`;
+              `à payer pour ${studentFullName(r)} (${r.class_name ?? ""}). Merci de passer à la caisse ou de payer par Mobile Money. ` +
+              `Détail des frais et reçus : ${base}/p/${r.parent_token}`;
             return (
               <tr key={r.id}>
                 <Td><Link href={`/eleves/${r.id}`} className="font-medium text-ink hover:text-brand-600">{studentFullName(r)}</Link><div className="text-xs text-muted">{r.student_number}</div></Td>
@@ -82,9 +85,12 @@ export default async function UnpaidPage(props: PageProps<"/impayes">) {
                 </Td>
                 <Td>{r.parent_name ?? "—"}<div className="text-xs text-muted">{r.parent_phone ?? ""}</div></Td>
                 <Td>
-                  {r.parent_phone ? (
-                    <a href={whatsAppLink(r.parent_phone, msg)} target="_blank" rel="noopener" className="font-semibold text-green-700 hover:underline">WhatsApp</a>
-                  ) : "—"}
+                  <div className="flex flex-wrap gap-x-3 gap-y-1">
+                    <Link href={`/paiements/nouveau?eleve=${r.id}`} className="font-semibold text-brand-700 hover:underline">Encaisser</Link>
+                    {r.parent_phone && (
+                      <a href={whatsAppLink(r.parent_phone, msg)} target="_blank" rel="noopener" className="font-semibold text-green-700 hover:underline">Rappel WhatsApp</a>
+                    )}
+                  </div>
                 </Td>
               </tr>
             );

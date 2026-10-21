@@ -24,19 +24,31 @@ export async function recordPayment(input: {
     if (!student) throw new UserError("Élève introuvable.");
     if (student.status !== "active") throw new UserError("Cet élève n'est plus actif : réactivez-le avant d'encaisser.");
 
-    const [fee] = await tx<{ amount_cents: bigint; currency: Currency; class_id: string | null; archived: boolean; name: string }[]>`
-      select amount_cents, currency, class_id, archived, name from fees
-      where id = ${input.feeId} and school_id = ${input.schoolId}`;
+    const [fee] = await tx<{ amount_cents: bigint; currency: Currency; class_id: string | null; archived: boolean;
+                             optional: boolean; name: string; has_override: boolean }[]>`
+      select coalesce(o.amount_cents, f.amount_cents) as amount_cents, f.currency, f.class_id, f.archived,
+             f.optional, f.name, o.fee_id is not null as has_override
+      from fees f
+      left join student_fee_overrides o on o.fee_id = f.id and o.student_id = ${input.studentId}
+      where f.id = ${input.feeId} and f.school_id = ${input.schoolId}`;
     if (!fee) throw new UserError("Frais introuvable.");
 
     const [{ paid }] = await tx<{ paid: bigint }[]>`
       select coalesce(sum(amount_cents), 0)::bigint as paid from payments
       where student_id = ${input.studentId} and fee_id = ${input.feeId} and status = 'valid'`;
-    const applies = !fee.archived && (fee.class_id === null || fee.class_id === student.class_id);
-    if (!applies && paid === BigInt(0)) throw new UserError("Ce frais ne concerne pas la classe de cet élève.");
+    const applies = fee.has_override || (!fee.archived && !fee.optional && (fee.class_id === null || fee.class_id === student.class_id));
+    if (!applies && paid === BigInt(0)) {
+      throw new UserError(fee.optional
+        ? `L'élève n'est pas inscrit au frais optionnel « ${fee.name} ». Inscrivez-le depuis sa fiche.`
+        : "Ce frais ne concerne pas la classe de cet élève.");
+    }
 
     const remaining = fee.amount_cents - paid;
-    if (remaining <= BigInt(0)) throw new UserError(`« ${fee.name} » est déjà entièrement payé pour cet élève.`);
+    if (remaining <= BigInt(0)) {
+      throw new UserError(fee.amount_cents === BigInt(0)
+        ? `L'élève est exempté de « ${fee.name} » : rien à encaisser.`
+        : `« ${fee.name} » est déjà entièrement payé pour cet élève.`);
+    }
     if (input.amountCents > remaining) {
       throw new UserError(
         `Le montant dépasse le reste à payer pour « ${fee.name} » : ${formatMoney(remaining, fee.currency)} maximum.`,
@@ -90,6 +102,7 @@ export type Receipt = {
   first_name: string | null;
   parent_name: string | null;
   parent_phone: string | null;
+  parent_token: string;
   class_name: string | null;
   school_id: string;
   school_name: string;
@@ -110,20 +123,21 @@ export async function getReceipt(schoolId: string, paymentId: string): Promise<R
   const [r] = await sql<Receipt[]>`
     select p.id, p.receipt_number, p.payment_date, p.created_at, p.amount_cents, p.currency, p.payment_method,
            p.transaction_number, p.comment, p.status, p.cancel_reason,
-           f.name as fee_name, f.amount_cents as fee_amount_cents,
-           (f.amount_cents - (
+           f.name as fee_name, coalesce(o.amount_cents, f.amount_cents) as fee_amount_cents,
+           (coalesce(o.amount_cents, f.amount_cents) - (
               select coalesce(sum(p2.amount_cents), 0) from payments p2
               where p2.student_id = p.student_id and p2.fee_id = p.fee_id and p2.status = 'valid'
                 and p2.created_at <= p.created_at))::bigint as fee_remaining_cents,
            0::bigint as currency_remaining_cents,
            u.name as agent_name,
-           s.id as student_id, s.student_number, s.last_name, s.middle_name, s.first_name, s.parent_name, s.parent_phone,
+           s.id as student_id, s.student_number, s.last_name, s.middle_name, s.first_name, s.parent_name, s.parent_phone, s.parent_token,
            c.name as class_name,
            sc.id as school_id, sc.name as school_name, sc.address as school_address, sc.city as school_city,
            sc.phone as school_phone, sc.email as school_email, sc.receipt_footer, sc.academic_year,
            sc.logo_data is not null as has_logo
     from payments p
     join fees f on f.id = p.fee_id
+    left join student_fee_overrides o on o.fee_id = p.fee_id and o.student_id = p.student_id
     join users u on u.id = p.recorded_by
     join students s on s.id = p.student_id
     left join classes c on c.id = s.class_id
@@ -140,10 +154,13 @@ export async function getReceipt(schoolId: string, paymentId: string): Promise<R
         and created_at <= (select created_at from payments where id = ${r.id})
       group by fee_id
     )
-    select coalesce(sum(greatest(f.amount_cents - coalesce(paid.paid, 0), 0)), 0)::bigint as remaining
-    from fees f cross join st left join paid on paid.fee_id = f.id
+    select coalesce(sum(greatest(coalesce(o.amount_cents, f.amount_cents) - coalesce(paid.paid, 0), 0)), 0)::bigint as remaining
+    from fees f cross join st
+    left join paid on paid.fee_id = f.id
+    left join student_fee_overrides o on o.fee_id = f.id and o.student_id = st.id
     where f.school_id = ${schoolId} and f.academic_year = ${r.academic_year} and f.currency = ${r.currency}
-      and (paid.paid is not null or (not f.archived and (f.class_id is null or f.class_id = st.class_id)))`;
+      and (paid.paid is not null or o.fee_id is not null
+           or (not f.archived and not f.optional and (f.class_id is null or f.class_id = st.class_id)))`;
   r.currency_remaining_cents = remaining;
   return r;
 }

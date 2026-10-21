@@ -4,12 +4,12 @@ import { classLabel, classOptions } from "@/lib/students";
 import { FEE_CATEGORIES, formatDate } from "@/lib/labels";
 import { centsToInput, formatMoney, type Currency } from "@/lib/money";
 import { ActionForm, ConfirmActionButton, SubmitButton } from "@/components/forms";
-import { Card, Field, Input, PageHeader, Select, Table, Td } from "@/components/ui";
+import { Badge, Card, Field, Input, PageHeader, Select, Table, Td } from "@/components/ui";
 import { createFee, removeFee, updateFee } from "./actions";
 
 export const metadata = { title: "Frais scolaires" };
 
-function FeeFields({ classes, d }: { classes: { id: string; name: string; section: string | null }[]; d?: { name: string; category: string; amount_cents: bigint; currency: string; due_date: Date | null; class_id: string | null } }) {
+function FeeFields({ classes, d }: { classes: { id: string; name: string; section: string | null }[]; d?: { name: string; category: string; amount_cents: bigint; currency: string; due_date: Date | null; class_id: string | null; optional: boolean } }) {
   return (
     <>
       <Field label="Type de frais *">
@@ -38,6 +38,10 @@ function FeeFields({ classes, d }: { classes: { id: string; name: string; sectio
       <Field label="Date limite de paiement">
         <Input name="due_date" type="date" defaultValue={d?.due_date ? new Date(d.due_date).toLocaleDateString("en-CA") : ""} />
       </Field>
+      <label className="flex items-start gap-2 text-sm text-gray-700 sm:col-span-3">
+        <input type="checkbox" name="optional" defaultChecked={d?.optional ?? false} className="mt-0.5 h-5 w-5 shrink-0" />
+        <span>Frais optionnel (transport, cantine…) : seuls les élèves inscrits depuis leur fiche le doivent</span>
+      </label>
     </>
   );
 }
@@ -47,8 +51,9 @@ export default async function FeesPage() {
   const [classes, fees] = await Promise.all([
     classOptions(school.id, school.academic_year),
     sql<{ id: string; name: string; category: string; amount_cents: bigint; currency: Currency; due_date: Date | null;
-          class_id: string | null; class_name: string | null; class_section: string | null; collected: bigint; payers: number }[]>`
-      select f.id, f.name, f.category, f.amount_cents, f.currency, f.due_date, f.class_id,
+          class_id: string | null; optional: boolean; class_name: string | null; class_section: string | null; collected: bigint; payers: number; enrolled: number }[]>`
+      select f.id, f.name, f.category, f.amount_cents, f.currency, f.due_date, f.class_id, f.optional,
+             (select count(*)::int from student_fee_overrides o where o.fee_id = f.id) as enrolled,
              c.name as class_name, c.section as class_section,
              coalesce(sum(p.amount_cents) filter (where p.status = 'valid'), 0)::bigint as collected,
              count(distinct p.student_id) filter (where p.status = 'valid')::int as payers
@@ -79,7 +84,10 @@ export default async function FeesPage() {
             <tr key={f.id} className="align-top">
               <Td>
                 <div className="font-semibold">{f.name}</div>
-                <div className="text-xs text-muted">{FEE_CATEGORIES[f.category as keyof typeof FEE_CATEGORIES]}</div>
+                <div className="text-xs text-muted">
+                  {FEE_CATEGORIES[f.category as keyof typeof FEE_CATEGORIES]}
+                  {f.optional && <> · <Badge color="blue">Optionnel</Badge> {f.enrolled} inscrit(s)</>}
+                </div>
               </Td>
               <Td className="font-semibold">{formatMoney(f.amount_cents, f.currency)}</Td>
               <Td>{f.class_name ? classLabel({ name: f.class_name, section: f.class_section }) : "Toutes les classes"}</Td>

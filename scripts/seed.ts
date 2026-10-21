@@ -59,10 +59,10 @@ async function main() {
       classIds.push(c.id);
     }
 
-    const fee = async (name: string, category: string, cents: number, currency: string, due: string, classId: string | null = null) => {
+    const fee = async (name: string, category: string, cents: number, currency: string, due: string, classId: string | null = null, optional = false) => {
       const [f] = await tx<{ id: string }[]>`
-        insert into fees (school_id, name, category, amount_cents, currency, academic_year, due_date, class_id)
-        values (${school.id}, ${name}, ${category}, ${cents}, ${currency}, ${YEAR}, ${due}, ${classId}) returning id`;
+        insert into fees (school_id, name, category, amount_cents, currency, academic_year, due_date, class_id, optional)
+        values (${school.id}, ${name}, ${category}, ${cents}, ${currency}, ${YEAR}, ${due}, ${classId}, ${optional}) returning id`;
       return { id: f.id, cents, currency };
     };
     const inscription = await fee("Frais d'inscription", "inscription", 2000, "USD", "2026-09-15");
@@ -71,6 +71,18 @@ async function main() {
     await fee("Minerval 3e trimestre", "minerval", 6000, "USD", "2027-04-15");
     const examen = await fee("Frais d'examen (1er semestre)", "examen", 2500000, "CDF", "2026-12-01");
     const labo = await fee("Frais de laboratoire", "autre", 1000, "USD", "2026-10-30", classIds[8]);
+    // Transport scolaire : frais optionnel, seuls les élèves inscrits le doivent.
+    const transport = [
+      await fee("Transport – Septembre 2026", "transport", 2500, "USD", "2026-09-10", null, true),
+      await fee("Transport – Octobre 2026", "transport", 2500, "USD", "2026-10-10", null, true),
+      await fee("Transport – Novembre 2026", "transport", 2500, "USD", "2026-11-10", null, true),
+    ];
+    const override = async (studentId: string, feeId: string, cents: number, reason: string | null) => {
+      await tx`insert into student_fee_overrides (student_id, fee_id, school_id, amount_cents, reason, created_by)
+               values (${studentId}, ${feeId}, ${school.id}, ${cents}, ${reason}, ${director.id})`;
+    };
+    type Family = { lastName: string; parentName: string; phone: string };
+    let family: Family | null = null;
 
     let studentCounter = 0;
     let receiptCounter = 0;
@@ -80,7 +92,12 @@ async function main() {
       const count = 10 + Math.floor(rand() * 5);
       for (let i = 0; i < count; i++) {
         const female = rand() < 0.5;
-        const lastName = pick(NOMS);
+        // Environ un élève sur huit a un frère ou une sœur déjà inscrit (même parent, même téléphone).
+        const sibling: Family | null = family && rand() < 0.12 ? family : null;
+        const lastName: string = sibling?.lastName ?? pick(NOMS);
+        const parentName: string = sibling?.parentName ?? `${pick(PRENOMS_M)} ${lastName}`;
+        const parentPhone: string = sibling?.phone ?? `08${Math.floor(10000000 + rand() * 89999999)}`;
+        family = { lastName, parentName, phone: parentPhone };
         const birthYear = 2020 - ci - Math.floor(rand() * 2);
         studentCounter++;
         const [s] = await tx<{ id: string }[]>`
@@ -89,7 +106,7 @@ async function main() {
           values (${school.id}, ${classId}, ${"26" + String(studentCounter).padStart(4, "0")}, ${lastName}, ${pick(POSTNOMS)},
                   ${female ? pick(PRENOMS_F) : pick(PRENOMS_M)}, ${`${birthYear}-${String(1 + Math.floor(rand() * 12)).padStart(2, "0")}-${String(1 + Math.floor(rand() * 28)).padStart(2, "0")}`},
                   ${female ? "F" : "M"}, ${`Av. ${pick(NOMS).toLowerCase().replace(/^./, (c) => c.toUpperCase())} n°${1 + Math.floor(rand() * 90)}, ${pick(COMMUNES)}`},
-                  ${`${pick(PRENOMS_M)} ${lastName}`}, ${`08${Math.floor(10000000 + rand() * 89999999)}`},
+                  ${parentName}, ${parentPhone},
                   ${"2026-09-0" + (1 + Math.floor(rand() * 8))}, ${"2026-09-01"})
           returning id`;
 
@@ -108,14 +125,29 @@ async function main() {
         const day = (from: number, to: number, month = "09") => `2026-${month}-${String(from + Math.floor(rand() * (to - from + 1))).padStart(2, "0")}`;
 
         if (rand() < 0.92) await pay(inscription, inscription.cents, day(1, 12));
+        // Quelques réductions (enfants du personnel) et exemptions (bourses) sur le minerval.
+        const special = rand();
+        const minervalDue = special < 0.05 ? 3000 : special < 0.07 ? 0 : minerval1.cents;
+        if (minervalDue !== minerval1.cents) {
+          for (const f of [minerval1.id]) {
+            await override(s.id, f, minervalDue, minervalDue === 0 ? "Bourse d'excellence" : "Enfant du personnel (50 %)");
+          }
+        }
         const r = rand();
-        if (r < 0.5) await pay(minerval1, minerval1.cents, day(15, 30));
+        if (minervalDue !== minerval1.cents) {
+          if (minervalDue > 0 && r < 0.7) await pay(minerval1, minervalDue, day(15, 30));
+        } else if (r < 0.5) await pay(minerval1, minerval1.cents, day(15, 30));
         else if (r < 0.75) {
           await pay(minerval1, 3000, day(15, 30));
           if (rand() < 0.4) await pay(minerval1, 1500, day(1, 7, "10"));
         }
         if (rand() < 0.3) await pay(examen, rand() < 0.5 ? examen.cents : 1000000, day(1, 8, "10"));
         if (ci === 8 && rand() < 0.6) await pay(labo, labo.cents, day(20, 30));
+        if (rand() < 0.2) {
+          for (const t of transport) await override(s.id, t.id, t.cents, null);
+          if (rand() < 0.8) await pay(transport[0], transport[0].cents, day(1, 10));
+          if (rand() < 0.5) await pay(transport[1], transport[1].cents, day(1, 9, "10"));
+        }
       }
     }
     // Quelques paiements du jour pour que la caisse du jour ne soit pas vide.

@@ -6,6 +6,7 @@ import { getReceipt } from "@/lib/payments";
 import { PAYMENT_METHODS, formatDate, studentFullName } from "@/lib/labels";
 import { formatMoney } from "@/lib/money";
 import { whatsAppLink } from "@/lib/phone";
+import { parentLink } from "@/lib/app-url";
 import { ActionForm, SubmitButton } from "@/components/forms";
 import { PrintButton } from "@/components/print-button";
 import { Alert, Card, Field, Input, LinkButton, buttonClass } from "@/components/ui";
@@ -27,7 +28,8 @@ export default async function ReceiptPage(props: PageProps<"/recus/[id]">) {
     `${r.school_name}\nReçu N° ${r.receipt_number} du ${formatDate(r.payment_date)}\n` +
     `Élève : ${name} (${r.class_name ?? "—"})\n` +
     `Frais : ${r.fee_name}\nMontant payé : ${formatMoney(r.amount_cents, r.currency)} (${PAYMENT_METHODS[r.payment_method]})\n` +
-    `Reste à payer (${r.currency}) : ${formatMoney(r.currency_remaining_cents, r.currency)}\nMerci.`;
+    `Reste à payer (${r.currency}) : ${formatMoney(r.currency_remaining_cents, r.currency)}\n` +
+    `Tous les reçus et le solde de votre enfant : ${await parentLink(r.parent_token)}\nMerci.`;
 
   const rows: [string, string][] = [
     ["Date du paiement", formatDate(r.payment_date)],

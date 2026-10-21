@@ -37,6 +37,23 @@ ANNULÉ.
   les retards. Le lien WhatsApp prépare un rappel poli au parent.
 - **Paiements** : historique sur une période, filtrable par moyen de paiement, exportable en Excel.
 - **Fiche élève** : total à payer, déjà payé, solde, détail par frais et historique des reçus.
+- **Tableau de bord** : un bandeau orange indique combien d'élèves ont dépassé une date limite. Cliquez pour relancer.
+
+## Réductions, exemptions et frais optionnels
+
+- **Réduction ou exemption** (directeur) : sur la fiche de l'élève, ouvrez « Accorder une réduction ou une exemption »,
+  choisissez le frais, puis un pourcentage, un montant ou « Exempté », et indiquez le motif (fratrie, bourse…).
+- **Frais optionnel** : dans Frais scolaires, cochez « Frais optionnel » (transport, cantine). Personne ne le doit
+  tant que l'élève n'y est pas inscrit. Sur la fiche de l'élève, cliquez « Inscrire l'élève » sous « Frais optionnels disponibles ».
+
+## Espace parent
+
+Chaque élève a un lien personnel. Le parent l'ouvre sur son téléphone, sans compte ni mot de passe, et voit ce qui
+reste à payer, la prochaine échéance, les retards et tous ses reçus en PDF.
+
+- Sur la fiche de l'élève, carte « Espace parent » : **Envoyer le lien par WhatsApp** ou **Copier le lien**.
+- Le lien est aussi ajouté automatiquement au message WhatsApp du reçu et au rappel d'impayé.
+- Si le lien a circulé hors de la famille, le directeur clique **Changer le lien** : l'ancien ne fonctionne plus.
 
 ## 4. Qui peut faire quoi
 
