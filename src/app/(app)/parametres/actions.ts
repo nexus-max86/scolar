@@ -2,13 +2,14 @@
 
 import { revalidatePath } from "next/cache";
 import { sql } from "@/lib/db";
-import { getCurrentUser, hashPassword, requireSchoolUser, requireWriteAccess, verifyPassword } from "@/lib/auth";
+import { assertNotDemo, getCurrentUser, hashPassword, requireSchoolUser, requireWriteAccess, verifyPassword } from "@/lib/auth";
 import { formAction, str, optStr, UserError } from "@/lib/actions";
 import { audit } from "@/lib/audit";
 import { readLogo } from "@/lib/logo";
 
 export const updateSchool = formAction(async (_prev, formData) => {
   const { user, school } = await requireWriteAccess(["director"]);
+  assertNotDemo(school);
   const name = str(formData, "name");
   const year = str(formData, "academic_year");
   const prefix = str(formData, "receipt_prefix").toUpperCase();
@@ -36,7 +37,8 @@ export const updateSchool = formAction(async (_prev, formData) => {
 });
 
 export const changeOwnPassword = formAction(async (_prev, formData) => {
-  await requireSchoolUser();
+  const { school } = await requireSchoolUser();
+  assertNotDemo(school);
   const user = await getCurrentUser();
   if (!user) throw new UserError("Session expirée.");
   const current = str(formData, "current");

@@ -27,6 +27,7 @@ export type CurrentSchool = {
   subscription_plan: string;
   subscription_end_date: Date | null;
   has_logo: boolean;
+  is_demo: boolean;
 };
 
 function secretKey() {
@@ -84,7 +85,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
 export const getCurrentSchool = cache(async (schoolId: string): Promise<CurrentSchool | null> => {
   const [school] = await sql<CurrentSchool[]>`
     select id, name, academic_year, status, subscription_plan, subscription_end_date,
-           logo_data is not null as has_logo
+           logo_data is not null as has_logo, is_demo
     from schools where id = ${schoolId}`;
   return school ?? null;
 });
@@ -121,6 +122,13 @@ export async function requireWriteAccess(roles: Role[] = ["director", "cashier"]
     );
   }
   return ctx;
+}
+
+/** Dans l'école de démonstration, ouverte à tous, on bloque ce qui empêcherait les visiteurs suivants d'entrer. */
+export function assertNotDemo(school: CurrentSchool) {
+  if (school.is_demo) {
+    throw new AccessError("Désactivé dans l'école de démonstration. Créez l'espace de votre école pour l'utiliser.");
+  }
 }
 
 export async function requireSuperAdmin() {

@@ -17,6 +17,7 @@ export type ParentStudent = {
   school_phone: string | null;
   academic_year: string;
   has_logo: boolean;
+  is_demo: boolean;
 };
 
 const TOKEN_RE = /^[0-9a-f]{32}$/;
@@ -28,7 +29,7 @@ export async function studentByParentToken(token: string): Promise<ParentStudent
     select s.id, s.school_id, s.student_number, s.last_name, s.middle_name, s.first_name, s.parent_phone,
            s.parent_token, s.status, c.name as class_name,
            sc.name as school_name, sc.address as school_address, sc.city as school_city, sc.phone as school_phone,
-           sc.academic_year, sc.logo_data is not null as has_logo
+           sc.academic_year, sc.logo_data is not null as has_logo, sc.is_demo
     from students s
     join schools sc on sc.id = s.school_id and sc.status <> 'suspended'
     left join classes c on c.id = s.class_id

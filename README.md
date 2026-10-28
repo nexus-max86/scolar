@@ -24,6 +24,8 @@ Plateforme SaaS de gestion scolaire pour les écoles privées de la RDC. Cette p
 | Tableau de bord | Élèves, classes, encaissé, reste à percevoir, encaissé du jour, paiements par mois, élèves par classe, derniers paiements et inscriptions, alertes. |
 | Utilisateurs | Le directeur crée des comptes caissier ou directeur, les désactive, change leur mot de passe. |
 | Abonnements | Formules Basic / Standard / Premium, date de fin, bandeau 7 jours avant expiration, lecture seule après expiration, suspension par l'administrateur. |
+| Démo publique | `/demo` : on entre sans mot de passe comme directeur, caissier ou parent dans une école fictive, avec une visite guidée écran par écran. Mots de passe et utilisateurs verrouillés. Remise à zéro chaque nuit (`/api/demo/reset`, tâche planifiée dans `vercel.json`, protégée par `CRON_SECRET`). |
+| Page de présentation | Accueil pour les écoles : rôles, vrais écrans, fonctionnement, tarifs, questions fréquentes, contact WhatsApp (`CONTACT_WHATSAPP`) ou e-mail (`CONTACT_EMAIL`). |
 | Administration | Statistiques globales, liste des écoles, changement de statut, de formule et de date de fin. |
 | Journal d'audit | Connexions, créations, modifications, paiements et annulations dans `audit_logs`. |
 

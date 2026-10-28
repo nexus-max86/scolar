@@ -32,6 +32,12 @@ export default async function LoginPage() {
           Inscrire mon école
         </Link>
       </p>
+      <p className="mt-2 text-center text-sm text-muted">
+        Pour découvrir sans compte :{" "}
+        <Link href="/demo" className="font-medium text-brand-600">
+          essayer la démo
+        </Link>
+      </p>
     </Card>
   );
 }

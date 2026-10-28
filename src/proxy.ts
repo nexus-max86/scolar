@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC = ["/", "/connexion", "/inscription"];
+const PUBLIC = ["/", "/connexion", "/inscription", "/demo", "/api/demo/reset"];
 
 /** Filtre léger : sans cookie de session, on renvoie vers la connexion. Les droits sont vérifiés dans chaque page. */
 export function proxy(request: NextRequest) {
@@ -15,5 +15,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|icon.svg).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|icon.svg|vitrine/).*)"],
 };

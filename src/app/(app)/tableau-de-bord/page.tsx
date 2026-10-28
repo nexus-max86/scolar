@@ -78,7 +78,7 @@ export default async function DashboardPage(props: PageProps<"/tableau-de-bord">
       {sp.refus && <div className="mb-4"><Alert kind="warning">Cette page est réservée au directeur de l&apos;école.</Alert></div>}
       <PageHeader title={`Bonjour ${firstName}`} subtitle={<span className="block first-letter:uppercase">{dateLabel} · Année scolaire {school.academic_year}</span>} />
 
-      {isDirector && (
+      {isDirector && !school.is_demo && (
         <SetupChecklist
           steps={[
             { done: counts.classes > 0, label: "Créer les classes", detail: "Par exemple « 6e primaire » ou « 1re humanités ».", href: "/classes", cta: "Créer" },

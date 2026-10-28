@@ -2,12 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { sql } from "@/lib/db";
-import { hashPassword, requireWriteAccess } from "@/lib/auth";
+import { assertNotDemo, hashPassword, requireWriteAccess } from "@/lib/auth";
 import { formAction, str, optStr, isUuid, UserError } from "@/lib/actions";
 import { audit } from "@/lib/audit";
 
 export const createUser = formAction(async (_prev, formData) => {
   const { user, school } = await requireWriteAccess(["director"]);
+  assertNotDemo(school);
   const name = str(formData, "name");
   const email = str(formData, "email").toLowerCase();
   const role = str(formData, "role");
@@ -28,6 +29,7 @@ export const createUser = formAction(async (_prev, formData) => {
 
 export const toggleUser = formAction(async (_prev, formData) => {
   const { user, school } = await requireWriteAccess(["director"]);
+  assertNotDemo(school);
   const id = str(formData, "id");
   if (!isUuid(id)) throw new UserError("Utilisateur introuvable.");
   if (id === user.id) throw new UserError("Vous ne pouvez pas désactiver votre propre compte.");
@@ -42,6 +44,7 @@ export const toggleUser = formAction(async (_prev, formData) => {
 
 export const resetPassword = formAction(async (_prev, formData) => {
   const { user, school } = await requireWriteAccess(["director"]);
+  assertNotDemo(school);
   const id = str(formData, "id");
   const password = str(formData, "password");
   if (!isUuid(id)) throw new UserError("Utilisateur introuvable.");

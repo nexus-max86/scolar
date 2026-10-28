@@ -3,6 +3,9 @@ import { requireSchoolUser } from "@/lib/auth";
 import { ROLE_LABELS, formatDate, todayISO } from "@/lib/labels";
 import { AppShell } from "@/components/app-shell";
 import { logout } from "../(auth)/actions";
+import { DemoTour } from "@/components/demo-tour";
+import { demoShowcase, tourSteps } from "@/lib/demo";
+import { leaveDemo } from "../demo/actions";
 
 function daysLeft(end: Date | null) {
   if (!end) return null;
@@ -15,7 +18,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const left = daysLeft(school.subscription_end_date);
 
   let banner: React.ReactNode = null;
-  if (expired) {
+  if (school.is_demo) {
+    banner = <DemoTour steps={tourSteps(user.role, await demoShowcase(school.id))} leaveAction={leaveDemo} />;
+  } else if (expired) {
     banner = (
       <div className="no-print border-b border-red-200 bg-red-50 px-4 py-2 text-center text-sm text-red-800">
         L&apos;abonnement a expiré le {formatDate(school.subscription_end_date)}. Les données restent consultables, mais
