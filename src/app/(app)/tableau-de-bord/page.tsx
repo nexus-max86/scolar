@@ -19,11 +19,12 @@ export default async function DashboardPage(props: PageProps<"/tableau-de-bord">
   const today = todayISO();
 
   const [[counts], balances, overdue, todayPayments, monthly, perClass, recentStudents, recentPayments] = await Promise.all([
-    sql<{ students: number; classes: number; staff: number; fees: number }[]>`
+    sql<{ students: number; classes: number; staff: number; fees: number; payments: number }[]>`
       select (select count(*) from students where school_id = ${school.id} and status = 'active')::int as students,
              (select count(*) from classes where school_id = ${school.id} and academic_year = ${school.academic_year})::int as classes,
              (select count(*) from users where school_id = ${school.id} and status = 'active')::int as staff,
-             (select count(*) from fees where school_id = ${school.id} and academic_year = ${school.academic_year} and not archived)::int as fees`,
+             (select count(*) from fees where school_id = ${school.id} and academic_year = ${school.academic_year} and not archived)::int as fees,
+             (select count(*) from payments where school_id = ${school.id})::int as payments`,
     schoolBalances(school.id, school.academic_year),
     schoolBalances(school.id, school.academic_year, { overdueOnly: true }),
     listPayments(school.id, { from: today, to: today }),
@@ -85,6 +86,7 @@ export default async function DashboardPage(props: PageProps<"/tableau-de-bord">
             { done: counts.classes > 0, label: "Créer les classes", detail: "Par exemple « 6e primaire » ou « 1re humanités ».", href: "/classes", cta: "Créer" },
             { done: counts.fees > 0, label: "Définir les frais scolaires", detail: "Inscription, minerval, mensualités… en dollars ou en francs.", href: "/frais", cta: "Définir" },
             { done: counts.students > 0, label: "Ajouter les élèves", detail: "Un par un, ou tous d'un coup depuis un fichier Excel.", href: "/eleves/import", cta: "Ajouter" },
+            { done: counts.payments > 0, label: "Reprendre les paiements déjà reçus", detail: "Vous démarrez en cours d'année ? Importez depuis Excel ce qui a déjà été payé.", href: "/paiements/import", cta: "Importer" },
             { done: counts.staff > 1, label: "Créer le compte du caissier", detail: "Il pourra encaisser et imprimer les reçus.", href: "/utilisateurs", cta: "Créer" },
             { done: school.has_logo, label: "Ajouter le logo de l'école", detail: "Il apparaîtra sur chaque reçu.", href: "/parametres", cta: "Ajouter" },
           ]}

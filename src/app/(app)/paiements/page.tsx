@@ -11,7 +11,7 @@ export const metadata = { title: "Paiements" };
 
 export default async function PaymentsPage(props: PageProps<"/paiements">) {
   const sp = await props.searchParams;
-  const { school } = await requireSchoolUser();
+  const { user, school } = await requireSchoolUser();
   const today = todayISO();
   const from = typeof sp.du === "string" && isISODate(sp.du) ? sp.du : monthStartISO(today);
   const to = typeof sp.au === "string" && isISODate(sp.au) ? sp.au : today;
@@ -31,6 +31,7 @@ export default async function PaymentsPage(props: PageProps<"/paiements">) {
           <>
             <LinkButton href="/paiements/nouveau" variant="success">+ Encaisser un paiement</LinkButton>
             <a href={`/api/export/paiements?${qs}`} className={buttonClass("secondary")}>Exporter Excel</a>
+            {user.role === "director" && <LinkButton href="/paiements/import" variant="secondary">Reprendre des paiements</LinkButton>}
           </>
         }
       />
