@@ -6,7 +6,7 @@ const PUBLIC = ["/", "/connexion", "/inscription", "/demo", "/api/demo/reset"];
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   // /p/… : espace parent, accessible par lien personnel sans connexion.
-  if (PUBLIC.includes(pathname) || pathname.startsWith("/p/") || request.cookies.has("ef_session")) return NextResponse.next();
+  if (PUBLIC.includes(pathname) || pathname.startsWith("/p/") || pathname === "/aide" || pathname.startsWith("/aide/") || request.cookies.has("ef_session")) return NextResponse.next();
   if (pathname.startsWith("/api/")) return new NextResponse("Non connecté", { status: 401 });
   const url = request.nextUrl.clone();
   url.pathname = "/connexion";
@@ -15,5 +15,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|icon.svg|vitrine/).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|icon.svg|vitrine/|guides/).*)"],
 };

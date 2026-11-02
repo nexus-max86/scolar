@@ -83,6 +83,7 @@ export default async function Home() {
           <nav className="flex items-center gap-1 text-sm sm:gap-4">
             <a href="#fonctionnement" className="hidden px-2 text-muted hover:text-ink sm:inline">Comment ça marche</a>
             <a href="#tarifs" className="hidden px-2 text-muted hover:text-ink sm:inline">Tarifs</a>
+            <Link href="/aide" className="hidden px-2 text-muted hover:text-ink sm:inline">Guides</Link>
             <Link href="/connexion" className="px-2 font-medium text-ink hover:text-brand-600">Se connecter</Link>
             <LinkButton href="/demo" className="hidden sm:inline-flex">Essayer la démo</LinkButton>
           </nav>
@@ -222,6 +223,7 @@ export default async function Home() {
           <span>© {new Date().getFullYear()} Scolar · Kinshasa</span>
           <div className="flex gap-4">
             <Link href="/demo" className="hover:text-ink">Démo</Link>
+            <Link href="/aide" className="hover:text-ink">Guides d&apos;utilisation</Link>
             <Link href="/connexion" className="hover:text-ink">Espace école</Link>
           </div>
         </div>

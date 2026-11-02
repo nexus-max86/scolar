@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CheckCircle2, Download, MessageCircle, Phone } from "lucide-react";
@@ -176,6 +177,7 @@ export default async function ParentPage(props: PageProps<"/p/[token]">) {
         <p className="pt-2 text-center text-xs text-muted">
           Ce lien est personnel : ne le partagez qu&apos;avec la famille. Une question sur un montant ? Contactez l&apos;école.
         </p>
+        <p className="text-center text-xs"><Link href="/aide/parent" className="font-medium text-brand-700 underline-offset-2 hover:underline">Comment utiliser cette page ?</Link></p>
         <div className="flex justify-center pb-4 opacity-60"><Wordmark className="scale-75" /></div>
       </main>
     </div>

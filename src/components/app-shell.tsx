@@ -6,6 +6,7 @@ import { useState, type ReactNode } from "react";
 import {
   Banknote, CircleAlert, Coins, House, LayoutDashboard, LogOut, Menu, ReceiptText, School, Search, Settings, UserCog,
   Users, Wallet, X, type LucideIcon,
+  CircleHelp,
 } from "lucide-react";
 import { LogoMark, cx } from "./ui";
 
@@ -128,8 +129,15 @@ export function AppShell({
         <div className="truncate text-sm font-medium text-ink">{userName}</div>
         <div className="text-xs text-muted">{roleLabel}</div>
       </div>
+      <Link
+        href={isDirector ? "/aide/directeur" : "/aide/caissier"}
+        target="_blank"
+        className="mt-1 flex min-h-10 w-full items-center gap-3 rounded-md px-2.5 text-sm text-gray-700 hover:bg-gray-100"
+      >
+        <CircleHelp size={18} strokeWidth={1.75} className="text-gray-400" aria-hidden /> Guide d&apos;utilisation
+      </Link>
       <form action={logoutAction}>
-        <button className="mt-1 flex min-h-10 w-full items-center gap-3 rounded-md px-2.5 text-sm text-gray-700 hover:bg-gray-100">
+        <button className="flex min-h-10 w-full items-center gap-3 rounded-md px-2.5 text-sm text-gray-700 hover:bg-gray-100">
           <LogOut size={18} strokeWidth={1.75} className="text-gray-400" aria-hidden /> Se déconnecter
         </button>
       </form>

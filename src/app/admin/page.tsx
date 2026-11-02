@@ -5,7 +5,7 @@ import { formatMoney } from "@/lib/money";
 import { ActionForm, SubmitButton } from "@/components/forms";
 import { Wordmark, Badge, Card, Field, Input, PageHeader, Select, StatCard, Table, Td } from "@/components/ui";
 import { logout } from "../(auth)/actions";
-import { updateSubscription } from "./actions";
+import { changeAdminPassword, updateSubscription } from "./actions";
 
 export const metadata = { title: "Administration" };
 
@@ -83,6 +83,13 @@ export default async function AdminPage() {
             );
           })}
         </Table>
+      </Card>
+      <Card title="Mon mot de passe" className="mt-6 max-w-md">
+        <ActionForm action={changeAdminPassword} resetOnSuccess>
+          <Field label="Mot de passe actuel"><Input name="current" type="password" required autoComplete="current-password" /></Field>
+          <Field label="Nouveau mot de passe" hint="10 caractères minimum"><Input name="next" type="password" required minLength={10} autoComplete="new-password" /></Field>
+          <SubmitButton variant="secondary">Changer le mot de passe</SubmitButton>
+        </ActionForm>
       </Card>
     </div>
   );

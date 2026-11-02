@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { sql } from "@/lib/db";
-import { requireSuperAdmin } from "@/lib/auth";
+import { hashPassword, requireSuperAdmin, verifyPassword } from "@/lib/auth";
 import { formAction, str, isUuid, isISODate, UserError } from "@/lib/actions";
 import { audit } from "@/lib/audit";
 
@@ -23,4 +23,16 @@ export const updateSubscription = formAction(async (_prev, formData) => {
   await audit({ schoolId: id, userId: admin.id, action: "modification_abonnement", table: "schools", recordId: id, details: { status, plan, end } });
   revalidatePath("/admin");
   return { success: "Abonnement mis à jour.", at: Date.now() };
+});
+
+export const changeAdminPassword = formAction(async (_prev, formData) => {
+  const admin = await requireSuperAdmin();
+  const current = str(formData, "current");
+  const next = str(formData, "next");
+  if (next.length < 10) throw new UserError("Le nouveau mot de passe doit contenir au moins 10 caractères.");
+  const [row] = await sql<{ password_hash: string }[]>`select password_hash from users where id = ${admin.id}`;
+  if (!(await verifyPassword(current, row.password_hash))) throw new UserError("Le mot de passe actuel est incorrect.");
+  await sql`update users set password_hash = ${await hashPassword(next)} where id = ${admin.id}`;
+  await audit({ schoolId: null, userId: admin.id, action: "changement_mot_de_passe", table: "users", recordId: admin.id });
+  return { success: "Votre mot de passe a été changé." };
 });
