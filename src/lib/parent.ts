@@ -4,6 +4,7 @@ export type ParentStudent = {
   id: string;
   school_id: string;
   student_number: string;
+  scolar_code: string;
   last_name: string;
   middle_name: string | null;
   first_name: string | null;
@@ -26,7 +27,7 @@ const TOKEN_RE = /^[0-9a-f]{32}$/;
 export async function studentByParentToken(token: string): Promise<ParentStudent | null> {
   if (!TOKEN_RE.test(token)) return null;
   const [s] = await sql<ParentStudent[]>`
-    select s.id, s.school_id, s.student_number, s.last_name, s.middle_name, s.first_name, s.parent_phone,
+    select s.id, s.school_id, s.student_number, s.scolar_code, s.last_name, s.middle_name, s.first_name, s.parent_phone,
            s.parent_token, s.status, c.name as class_name,
            sc.name as school_name, sc.address as school_address, sc.city as school_city, sc.phone as school_phone,
            sc.academic_year, sc.logo_data is not null as has_logo, sc.is_demo

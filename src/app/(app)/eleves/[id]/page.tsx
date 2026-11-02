@@ -24,7 +24,7 @@ export default async function StudentPage(props: PageProps<"/eleves/[id]">) {
   if (!isUuid(id)) notFound();
 
   const [student] = await sql<
-    { id: string; student_number: string; last_name: string; middle_name: string | null; first_name: string | null;
+    { id: string; student_number: string; scolar_code: string; last_name: string; middle_name: string | null; first_name: string | null;
       birth_date: Date | null; gender: string | null; address: string | null; parent_name: string | null;
       parent_phone: string | null; status: keyof typeof STUDENT_STATUS; enrolled_at: Date; parent_token: string;
       class_name: string | null; class_section: string | null }[]
@@ -63,7 +63,7 @@ export default async function StudentPage(props: PageProps<"/eleves/[id]">) {
       {sp.modifie && <div className="mb-4"><Alert kind="success">Modifications enregistrées.</Alert></div>}
       <PageHeader
         title={name}
-        subtitle={<>Matricule {student.student_number} · {classLabel(student.class_name ? { name: student.class_name, section: student.class_section } : null)} · <Badge color={student.status === "active" ? "green" : "gray"}>{STUDENT_STATUS[student.status]}</Badge></>}
+        subtitle={<>Matricule {student.student_number} · <span className="font-mono">{student.scolar_code}</span> · {classLabel(student.class_name ? { name: student.class_name, section: student.class_section } : null)} · <Badge color={student.status === "active" ? "green" : "gray"}>{STUDENT_STATUS[student.status]}</Badge></>}
         actions={
           <>
             {student.status === "active" && <LinkButton href={`/paiements/nouveau?eleve=${id}`} variant="success">Encaisser un paiement</LinkButton>}
@@ -207,6 +207,9 @@ export default async function StudentPage(props: PageProps<"/eleves/[id]">) {
           </a>
           <CopyButton text={link} />
           <a href={link} target="_blank" rel="noopener" className={buttonClass("ghost")}>Voir ce que voit le parent</a>
+          {isDirector && (
+            <a href={`/annonces?eleve=${id}`} className={buttonClass("ghost")}>Envoyer une annonce à cette famille</a>
+          )}
           {isDirector && (
             <ConfirmActionButton
               action={resetParentLink}

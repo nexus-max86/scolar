@@ -125,6 +125,7 @@ export type Receipt = {
   agent_name: string;
   student_id: string;
   student_number: string;
+  scolar_code: string;
   last_name: string;
   middle_name: string | null;
   first_name: string | null;
@@ -159,7 +160,7 @@ export async function getReceipt(schoolId: string, paymentId: string): Promise<R
                 and p2.created_at <= p.created_at))::bigint as fee_remaining_cents,
            0::bigint as currency_remaining_cents,
            u.name as agent_name,
-           s.id as student_id, s.student_number, s.last_name, s.middle_name, s.first_name, s.parent_name, s.parent_phone, s.parent_token,
+           s.id as student_id, s.student_number, s.scolar_code, s.last_name, s.middle_name, s.first_name, s.parent_name, s.parent_phone, s.parent_token,
            c.name as class_name,
            sc.id as school_id, sc.name as school_name, sc.address as school_address, sc.city as school_city,
            sc.phone as school_phone, sc.email as school_email, sc.receipt_footer, sc.academic_year,

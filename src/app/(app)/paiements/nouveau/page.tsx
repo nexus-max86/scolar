@@ -21,12 +21,12 @@ export default async function NewPaymentPage(props: PageProps<"/paiements/nouvea
   if (!studentId) {
     const like = `%${q.toLowerCase()}%`;
     const results = q
-      ? await sql<{ id: string; student_number: string; last_name: string; middle_name: string | null; first_name: string | null; class_name: string | null }[]>`
-          select s.id, s.student_number, s.last_name, s.middle_name, s.first_name, c.name as class_name
+      ? await sql<{ id: string; student_number: string; scolar_code: string; last_name: string; middle_name: string | null; first_name: string | null; class_name: string | null }[]>`
+          select s.id, s.student_number, s.scolar_code, s.last_name, s.middle_name, s.first_name, c.name as class_name
           from students s left join classes c on c.id = s.class_id
           where s.school_id = ${school.id} and s.status = 'active'
             and (lower(s.last_name || ' ' || coalesce(s.middle_name, '') || ' ' || coalesce(s.first_name, '')) like ${like}
-                 or lower(s.student_number) like ${like})
+                 or lower(s.student_number) like ${like} or lower(s.scolar_code) like ${like})
           order by s.last_name limit 20`
       : [];
     return (
@@ -34,7 +34,7 @@ export default async function NewPaymentPage(props: PageProps<"/paiements/nouvea
         <PageHeader title="Encaisser un paiement" subtitle="Étape 1 : trouver l'élève" />
         <Card>
           <form className="flex gap-2">
-            <Input name="q" defaultValue={q} placeholder="Nom ou matricule de l'élève" type="search" autoFocus aria-label="Rechercher un élève" />
+            <Input name="q" defaultValue={q} placeholder="Nom, matricule ou code SC de l'élève" type="search" autoFocus aria-label="Rechercher un élève" />
             <button className={buttonClass("primary")}>Rechercher</button>
           </form>
           {q && (
@@ -43,7 +43,7 @@ export default async function NewPaymentPage(props: PageProps<"/paiements/nouvea
                 <li key={s.id}>
                   <Link href={`/paiements/nouveau?eleve=${s.id}`} className="flex min-h-12 items-center justify-between gap-3 px-2 py-2 hover:bg-gray-50">
                     <span className="font-semibold text-brand-700">{studentFullName(s)}</span>
-                    <span className="text-sm text-muted">{s.class_name ?? "—"} · {s.student_number}</span>
+                    <span className="text-sm text-muted">{s.class_name ?? "—"} · {s.student_number} · {s.scolar_code}</span>
                   </Link>
                 </li>
               ))}

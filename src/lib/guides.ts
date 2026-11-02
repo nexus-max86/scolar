@@ -106,6 +106,7 @@ export const GUIDES: Guide[] = [
         title: "La fiche de l'élève",
         intro: "Touchez le nom d'un élève, ou cherchez-le par son nom ou son matricule en haut de l'écran.",
         points: [
+          "Sous le nom : le matricule de l'école et le **code élève** Scolar (par exemple SC-2026-000125). Ce code est unique : il évite toute confusion entre deux élèves du même nom.",
           "En haut : **total à payer**, **déjà payé** et **solde restant**, par devise.",
           "Le tableau des frais montre pour chaque frais ce qui a été payé, ce qui reste et la date limite.",
           "En bas : l'historique de tous les reçus de l'élève.",
@@ -134,6 +135,30 @@ export const GUIDES: Guide[] = [
           "Si le lien a circulé hors de la famille, touchez **Changer le lien** : l'ancien ne fonctionne plus.",
         ],
         image: { file: "lien-parent", alt: "Carte Espace parent sur la fiche élève" },
+      },
+      {
+        id: "annonces",
+        title: "Publier une annonce aux parents",
+        intro: "Réunions, examens, congés, changements d'horaire, événements : les parents la lisent sur leur espace parent.",
+        steps: [
+          "Menu **Annonces**.",
+          "Écrivez le titre et le message. Ajoutez la date concernée si c'est une réunion, un examen ou un congé.",
+          "Choisissez **Toute l'école** ou **Certaines classes**. Pour une seule famille, partez de la fiche de l'élève : **Envoyer une annonce à cette famille**.",
+          "Touchez **Publier l'annonce**. Elle apparaît aussitôt, marquée « Nouveau », sur l'espace parent des familles concernées.",
+        ],
+        image: { file: "annonces", alt: "Page des annonces : rédaction et liste" },
+      },
+      {
+        id: "annonces-whatsapp",
+        title: "Prévenir les familles par WhatsApp",
+        intro: "Après la publication, la page de l'annonce sert à prévenir les parents.",
+        points: [
+          "**Envoyer à chaque famille** : un bouton **Envoyer** par famille ouvre WhatsApp avec le message et le lien personnel du parent. Les frères et sœurs sont regroupés.",
+          "**Partager dans WhatsApp** ou **Copier le message** : pour le groupe des parents d'une classe ou une liste de diffusion.",
+          "Scolar indique combien de familles ont ouvert l'annonce, et le badge **Lue** apparaît à côté de chaque famille qui l'a lue.",
+          "**Retirer l'annonce** la fait disparaître de l'espace des parents.",
+        ],
+        image: { file: "annonce-detail", alt: "Annonce publiée avec l'envoi WhatsApp par famille" },
       },
       {
         id: "reprise",
@@ -220,7 +245,7 @@ export const GUIDES: Guide[] = [
         title: "Qui peut faire quoi",
         points: [
           "**Directeur et caissier** : inscrire et chercher un élève, encaisser, imprimer un reçu, voir les impayés et la caisse.",
-          "**Directeur seulement** : classes, frais, réductions, utilisateurs, paramètres, annulation d'un paiement, archivage d'un élève, reprise des paiements.",
+          "**Directeur seulement** : annonces, classes, frais, réductions, utilisateurs, paramètres, annulation d'un paiement, archivage d'un élève, reprise des paiements.",
           "Le caissier ne voit dans la caisse du jour que ses propres encaissements. Le directeur voit ceux de toute l'école.",
         ],
       },
@@ -257,7 +282,7 @@ export const GUIDES: Guide[] = [
         title: "Trouver l'élève",
         steps: [
           "Touchez **Encaisser**.",
-          "Tapez les premières lettres du nom, du post-nom ou le matricule de l'élève.",
+          "Tapez les premières lettres du nom, du post-nom, le matricule ou le **code élève** (SC-…) inscrit sur les reçus.",
           "Touchez l'élève dans la liste. Vérifiez la classe pour ne pas confondre deux élèves du même nom.",
         ],
         image: { file: "m-encaisser-recherche", alt: "Recherche d'un élève avant d'encaisser" },
@@ -350,12 +375,23 @@ export const GUIDES: Guide[] = [
         id: "page",
         title: "Lire la page de votre enfant",
         points: [
-          "En haut : le nom de l'enfant, sa classe et l'école.",
+          "En haut : le nom de l'enfant, sa classe, son matricule et son **code élève** (SC-…), à donner à l'école en cas de question.",
           "**Reste à payer** : le montant total encore dû, en dollars et en francs.",
           "**Prochain paiement** : le prochain frais à payer et sa date limite. Il devient rouge **En retard** quand la date est passée.",
           "Le détail des frais indique pour chacun ce qui est payé et ce qui reste.",
         ],
         image: { file: "m-parent", alt: "Page parent sur téléphone" },
+      },
+      {
+        id: "annonces",
+        title: "Lire les annonces de l'école",
+        points: [
+          "En haut de la page, **Annonces de l'école** affiche les réunions, examens, congés et informations importantes.",
+          "Une annonce que vous n'avez pas encore lue porte le badge **Nouveau**.",
+          "La date concernée (réunion, examen, congé) est indiquée en bleu.",
+          "L'école sait que vous avez ouvert l'annonce : inutile de répondre pour confirmer.",
+        ],
+        image: { file: "m-parent-annonces", alt: "Annonces de l'école sur la page parent" },
       },
       {
         id: "recus",

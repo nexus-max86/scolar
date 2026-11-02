@@ -1,9 +1,10 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { CheckCircle2, Download, MessageCircle, Phone } from "lucide-react";
+import { CalendarDays, CheckCircle2, Download, Megaphone, MessageCircle, Phone } from "lucide-react";
 import { sql } from "@/lib/db";
 import { siblingsOf, studentByParentToken } from "@/lib/parent";
+import { announcementsForStudent, markRead } from "@/lib/announcements";
 import { studentFeeLines, totalsFromLines } from "@/lib/finance";
 import { PAYMENT_METHODS, formatDate, studentFullName, todayISO, type PaymentMethod } from "@/lib/labels";
 import { formatMoney, type Currency } from "@/lib/money";
@@ -21,7 +22,7 @@ export default async function ParentPage(props: PageProps<"/p/[token]">) {
   const s = await studentByParentToken(token);
   if (!s) notFound();
 
-  const [lines, payments, siblings] = await Promise.all([
+  const [lines, payments, siblings, news] = await Promise.all([
     studentFeeLines(s.school_id, s.id, s.academic_year),
     sql<{ id: string; receipt_number: string; payment_date: Date; amount_cents: bigint; currency: Currency;
           payment_method: PaymentMethod; fee_name: string }[]>`
@@ -30,7 +31,10 @@ export default async function ParentPage(props: PageProps<"/p/[token]">) {
       where p.student_id = ${s.id} and p.school_id = ${s.school_id} and p.status = 'valid'
       order by p.payment_date desc, p.created_at desc`,
     siblingsOf(s),
+    announcementsForStudent(s),
   ]);
+  // Accusé de lecture : l'école voit combien de familles ont ouvert chaque annonce.
+  await markRead(s.id, news.filter((a) => !a.read_at).map((a) => a.id));
   const totals = totalsFromLines(lines);
   const allPaid = totals.remaining.USD + totals.remaining.CDF === BigInt(0);
   const today = todayISO();
@@ -70,8 +74,37 @@ export default async function ParentPage(props: PageProps<"/p/[token]">) {
         <div>
           <div className="text-[13px] text-muted">Espace parent · {s.academic_year}</div>
           <h1 className="mt-0.5 text-xl font-semibold tracking-tight text-ink">{name}</h1>
-          <div className="text-sm text-muted">{s.class_name ?? "Classe non attribuée"} · Matricule {s.student_number}</div>
+          <div className="text-sm text-muted">{s.class_name ?? "Classe non attribuée"} · Matricule {s.student_number} · <span className="font-mono">{s.scolar_code}</span></div>
         </div>
+
+        {news.length > 0 && (
+          <section className="rounded-[var(--radius-card)] border border-line bg-white" aria-labelledby="annonces">
+            <h2 id="annonces" className="flex items-center gap-2 border-b border-line px-4 py-3 text-sm font-semibold text-ink">
+              <Megaphone className="h-4 w-4 text-brand-600" aria-hidden /> Annonces de l&apos;école
+            </h2>
+            <ul className="divide-y divide-line">
+              {news.slice(0, 8).map((a, k) => (
+                <li key={a.id}>
+                  <details open={!a.read_at || k === 0} className="group px-4 py-3">
+                    <summary className="flex cursor-pointer list-none items-start justify-between gap-3">
+                      <span className="text-sm font-medium text-ink">{a.title}</span>
+                      <span className="flex shrink-0 items-center gap-2">
+                        {!a.read_at && <Badge color="blue">Nouveau</Badge>}
+                        <span className="text-xs text-muted">{formatDate(a.created_at)}</span>
+                      </span>
+                    </summary>
+                    {a.event_date && (
+                      <p className="mt-2 inline-flex items-center gap-1.5 rounded-md bg-brand-50 px-2 py-1 text-xs font-medium text-brand-800">
+                        <CalendarDays className="h-3.5 w-3.5" aria-hidden /> {formatDate(a.event_date)}
+                      </p>
+                    )}
+                    <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-gray-700">{a.body}</p>
+                  </details>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         <section className={cx("rounded-[var(--radius-card)] border p-5", allPaid ? "border-green-200 bg-green-50" : "border-line bg-white")}>
           {allPaid ? (

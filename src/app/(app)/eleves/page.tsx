@@ -23,16 +23,16 @@ export default async function StudentsPage(props: PageProps<"/eleves">) {
 
   const like = `%${q.toLowerCase()}%`;
   const students = await sql<
-    { id: string; student_number: string; last_name: string; middle_name: string | null; first_name: string | null;
+    { id: string; student_number: string; scolar_code: string; last_name: string; middle_name: string | null; first_name: string | null;
       parent_phone: string | null; class_name: string | null; class_section: string | null; status: string; total: number }[]
   >`
-    select s.id, s.student_number, s.last_name, s.middle_name, s.first_name, s.parent_phone, s.status,
+    select s.id, s.student_number, s.scolar_code, s.last_name, s.middle_name, s.first_name, s.parent_phone, s.status,
            c.name as class_name, c.section as class_section, count(*) over ()::int as total
     from students s left join classes c on c.id = s.class_id
     where s.school_id = ${school.id} and s.status = ${status}
       ${classId ? sql`and s.class_id = ${classId}` : sql``}
       ${q ? sql`and (lower(s.last_name || ' ' || coalesce(s.middle_name, '') || ' ' || coalesce(s.first_name, '')) like ${like}
-                    or lower(s.student_number) like ${like} or s.parent_phone like ${like})` : sql``}
+                    or lower(s.student_number) like ${like} or lower(s.scolar_code) like ${like} or s.parent_phone like ${like})` : sql``}
     order by s.last_name, s.middle_name, s.first_name
     limit ${PAGE_SIZE} offset ${(page - 1) * PAGE_SIZE}`;
 
@@ -59,7 +59,7 @@ export default async function StudentsPage(props: PageProps<"/eleves">) {
         }
       />
       <form className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-[1fr_200px_160px_auto] sm:gap-3">
-        <Input name="q" defaultValue={q} placeholder="Nom, matricule ou téléphone" type="search" aria-label="Rechercher" className="col-span-2 sm:col-span-1" />
+        <Input name="q" defaultValue={q} placeholder="Nom, matricule, code SC ou téléphone" type="search" aria-label="Rechercher" className="col-span-2 sm:col-span-1" />
         <Select name="classe" defaultValue={classId} aria-label="Classe">
           <option value="">Toutes les classes</option>
           {classes.map((c) => <option key={c.id} value={c.id}>{classLabel(c)}</option>)}
@@ -80,7 +80,7 @@ export default async function StudentsPage(props: PageProps<"/eleves">) {
                 key={s.id}
                 href={`/eleves/${s.id}`}
                 title={studentFullName(s)}
-                subtitle={`${s.class_name ? classLabel({ name: s.class_name, section: s.class_section }) : "Sans classe"} · ${s.student_number}`}
+                subtitle={`${s.class_name ? classLabel({ name: s.class_name, section: s.class_section }) : "Sans classe"} · ${s.student_number} · ${s.scolar_code}`}
                 right={owes ? <span className="text-red-700"><MoneyLines totals={t.remaining} /></span> : null}
                 rightSub={<Badge color={STATUS_LABELS[st].color}>{STATUS_LABELS[st].label}</Badge>}
               />
@@ -94,7 +94,7 @@ export default async function StudentsPage(props: PageProps<"/eleves">) {
             const st = t ? paymentStatus(t.due, t.paid, t.remaining) : "none";
             return (
               <tr key={s.id} className="hover:bg-gray-50">
-                <Td className="font-mono text-xs">{s.student_number}</Td>
+                <Td className="font-mono text-xs">{s.student_number}<div className="text-[11px] text-muted">{s.scolar_code}</div></Td>
                 <Td>
                   <Link href={`/eleves/${s.id}`} className="font-medium text-ink hover:text-brand-600">
                     {studentFullName(s)}

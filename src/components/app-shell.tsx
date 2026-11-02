@@ -7,6 +7,7 @@ import {
   Banknote, CircleAlert, Coins, House, LayoutDashboard, LogOut, Menu, ReceiptText, School, Search, Settings, UserCog,
   Users, Wallet, X, type LucideIcon,
   CircleHelp,
+  Megaphone,
 } from "lucide-react";
 import { LogoMark, cx } from "./ui";
 
@@ -21,6 +22,7 @@ const DAILY: NavItem[] = [
   { href: "/caisse", label: "Caisse du jour", icon: Wallet },
 ];
 const SETUP: NavItem[] = [
+  { href: "/annonces", label: "Annonces", icon: Megaphone },
   { href: "/classes", label: "Classes", icon: School },
   { href: "/frais", label: "Frais scolaires", icon: Coins },
   { href: "/utilisateurs", label: "Utilisateurs", icon: UserCog },
@@ -68,7 +70,7 @@ function StudentSearch({ className, autoFocus }: { className?: string; autoFocus
         name="q"
         type="search"
         autoFocus={autoFocus}
-        placeholder="Rechercher un élève (nom ou matricule)"
+        placeholder="Rechercher un élève (nom, matricule ou code SC)"
         aria-label="Rechercher un élève"
         className="h-10 w-full rounded-lg border border-line bg-white pl-9 pr-3 text-base placeholder:text-gray-400 focus:border-brand-500 focus:outline-none focus:ring-3 focus:ring-brand-100 sm:text-sm"
       />

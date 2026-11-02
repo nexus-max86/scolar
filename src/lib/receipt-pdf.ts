@@ -75,6 +75,7 @@ export async function receiptPdf(
   row("Date du paiement", formatDate(r.payment_date));
   row("Élève", studentFullName(r), { bold: true });
   row("Matricule", r.student_number);
+  row("Code élève", r.scolar_code);
   row("Classe", r.class_name ?? "—");
   row("Année scolaire", r.academic_year);
   y -= 4;
@@ -183,6 +184,7 @@ async function ticketPdf(r: Receipt, widthMm: 58 | 80): Promise<Uint8Array> {
   rule();
   pair("Élève", studentFullName(r), bold);
   pair("Matricule", r.student_number);
+  pair("Code élève", r.scolar_code);
   pair("Classe", r.class_name ?? "-");
   pair("Frais", r.fee_name);
   pair("Moyen", PAYMENT_METHODS[r.payment_method]);

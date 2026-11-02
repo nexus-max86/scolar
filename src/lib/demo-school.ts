@@ -147,6 +147,24 @@ export async function resetDemoSchool(sql: postgres.Sql) {
       update payments set payment_date = current_date, created_at = now() - (random() * interval '5 hours')
       where id in (select id from payments where school_id = ${school.id} order by created_at desc limit 6)`;
     await tx`update schools set student_counter = ${studentCounter}, receipt_counter = ${receiptCounter} where id = ${school.id}`;
+    // Annonces d'exemple, avec quelques familles qui les ont déjà lues.
+    const news: [string, string, string | null, "school" | "classes", string[], string][] = [
+      ["Réunion des parents du 1er trimestre", "Chers parents,\n\nNous vous invitons à la réunion de fin du 1er trimestre, dans la grande salle à 9 h. Nous y présenterons les résultats et le calendrier des examens. Votre présence est importante.\n\nLa Direction", "current_date + 6", "school", [], "2 days"],
+      ["Congé de la Toussaint", "Les cours seront suspendus du 1er au 3 novembre inclus. Reprise normale le lundi suivant à 7 h 30.", null, "school", [], "8 days"],
+      ["Examens du 1er semestre : calendrier", "Les examens des humanités commencent le lundi 7 décembre. Chaque élève doit être en ordre avec les frais d'examen pour recevoir sa fiche de passage.", "'2026-12-07'", "classes", classIds.slice(6), "4 days"],
+    ];
+    for (const [title, body, date, audience, cls, ago] of news) {
+      await tx.unsafe(
+        `insert into announcements (school_id, title, body, event_date, audience, class_ids, created_by, created_at)
+         values ($1, $2, $3, ${date ?? "null"}, $4, $5::uuid[], $6, now() - interval '${ago}')`,
+        [school.id, title, body, audience, cls, director.id],
+      );
+    }
+    await tx`
+      insert into announcement_reads (announcement_id, student_id, read_at)
+      select a.id, s.id, a.created_at + interval '3 hours'
+      from announcements a join students s on s.school_id = a.school_id
+      where a.school_id = ${school.id} and a.audience = 'school' and random() < 0.45`;
     return { students: studentCounter, payments: receiptCounter };
   });
 }

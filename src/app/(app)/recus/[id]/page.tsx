@@ -40,6 +40,7 @@ export default async function ReceiptPage(props: PageProps<"/recus/[id]">) {
     ["Date du paiement", formatDate(r.payment_date)],
     ["Élève", name],
     ["Matricule", r.student_number],
+    ["Code élève", r.scolar_code],
     ["Classe", r.class_name ?? "—"],
     ["Frais", r.fee_name],
     ["Montant du frais", formatMoney(r.fee_amount_cents, r.currency)],
