@@ -2,9 +2,10 @@ import { sql } from "@/lib/db";
 import { isUuid } from "@/lib/actions";
 import { getReceipt } from "@/lib/payments";
 import { receiptPdf } from "@/lib/receipt-pdf";
+import { receiptFormat } from "@/lib/receipt-format";
 import { forbidden, routeSchoolUser } from "@/lib/route-auth";
 
-export async function GET(_req: Request, ctx: RouteContext<"/api/recus/[id]/pdf">) {
+export async function GET(req: Request, ctx: RouteContext<"/api/recus/[id]/pdf">) {
   const { id } = await ctx.params;
   const auth = await routeSchoolUser();
   if (!auth) return forbidden();
@@ -18,7 +19,8 @@ export async function GET(_req: Request, ctx: RouteContext<"/api/recus/[id]/pdf"
       select logo_data, logo_mime from schools where id = ${auth.school.id}`;
     logo = row ? { data: row.logo_data, mime: row.logo_mime } : null;
   }
-  const bytes = await receiptPdf(receipt, logo);
+  const format = await receiptFormat(req, auth.school.id);
+  const bytes = await receiptPdf(receipt, logo, format);
   return new Response(new Uint8Array(bytes), {
     headers: {
       "Content-Type": "application/pdf",

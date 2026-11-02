@@ -2,7 +2,7 @@ import { requireSchoolUser } from "@/lib/auth";
 import { sql } from "@/lib/db";
 import { PLANS, SCHOOL_STATUS, formatDate } from "@/lib/labels";
 import { ActionForm, SubmitButton } from "@/components/forms";
-import { Card, Field, Input, PageHeader, Textarea } from "@/components/ui";
+import { Card, Field, Input, PageHeader, Select, Textarea } from "@/components/ui";
 import { changeOwnPassword, updateSchool } from "./actions";
 
 export const metadata = { title: "Paramètres" };
@@ -10,8 +10,8 @@ export const metadata = { title: "Paramètres" };
 export default async function SettingsPage() {
   const { school } = await requireSchoolUser(["director"]);
   const [s] = await sql<{ name: string; address: string | null; city: string | null; phone: string | null; email: string | null;
-    director_name: string | null; academic_year: string; receipt_prefix: string; receipt_footer: string | null }[]>`
-    select name, address, city, phone, email, director_name, academic_year, receipt_prefix, receipt_footer
+    director_name: string | null; academic_year: string; receipt_prefix: string; receipt_footer: string | null; receipt_format: string }[]>`
+    select name, address, city, phone, email, director_name, academic_year, receipt_prefix, receipt_footer, receipt_format
     from schools where id = ${school.id}`;
 
   return (
@@ -43,6 +43,13 @@ export default async function SettingsPage() {
             </div>
             <Field label="Préfixe des numéros de reçu" hint="Ex. : REC donne REC-2026-000001">
               <Input name="receipt_prefix" required defaultValue={s.receipt_prefix} maxLength={8} />
+            </Field>
+            <Field label="Format des reçus" hint="Ticket : pour une petite imprimante thermique">
+              <Select name="receipt_format" defaultValue={s.receipt_format}>
+                <option value="a4">Feuille A4 / A5</option>
+                <option value="ticket80">Ticket 80 mm</option>
+                <option value="ticket58">Ticket 58 mm</option>
+              </Select>
             </Field>
             <Field label="Mention en bas des reçus" className="sm:col-span-2">
               <Textarea name="receipt_footer" defaultValue={s.receipt_footer ?? ""} placeholder="Les frais versés ne sont pas remboursables." maxLength={90} />

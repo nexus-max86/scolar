@@ -28,7 +28,8 @@ export default async function DashboardPage(props: PageProps<"/tableau-de-bord">
     schoolBalances(school.id, school.academic_year, { overdueOnly: true }),
     listPayments(school.id, { from: today, to: today }),
     sql<{ month: string; currency: Currency; total: bigint }[]>`
-      select to_char(payment_date, 'YYYY-MM') as month, currency, sum(amount_cents)::bigint as total
+      select to_char(payment_date, 'YYYY-MM') as month, coalesce(received_currency, currency) as currency,
+             sum(coalesce(received_cents, amount_cents))::bigint as total
       from payments
       where school_id = ${school.id} and status = 'valid' and payment_date > (${today}::date - interval '6 months')
       group by 1, 2 order by 1`,
@@ -48,7 +49,7 @@ export default async function DashboardPage(props: PageProps<"/tableau-de-bord">
   const remaining = sumTotals(balances, "remaining_cents");
   const todayValid = todayPayments.filter((p) => p.status === "valid");
   const todayTotal = emptyTotals();
-  for (const p of todayValid) todayTotal[p.currency] += p.amount_cents;
+  for (const p of todayValid) todayTotal[p.cash_currency] += p.cash_cents;
   const debtors = new Set(balances.filter((b) => b.remaining_cents > BigInt(0)).map((b) => b.student_id)).size;
 
   const lateIds = new Set(overdue.filter((b) => b.remaining_cents > BigInt(0)).map((b) => b.student_id));

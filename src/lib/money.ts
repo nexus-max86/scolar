@@ -44,3 +44,25 @@ export function formatTotals(t: Totals): string {
   const parts = CURRENCIES.filter((c) => t[c] !== BigInt(0)).map((c) => formatMoney(t[c], c));
   return parts.length ? parts.join(" + ") : formatMoney(0, "USD");
 }
+
+/** Taux du jour saisi par le caissier (« 2 850 » francs pour 1 dollar) → centièmes de franc. Null si invalide. */
+export function parseRate(input: string): bigint | null {
+  const r = parseAmount(input);
+  return r !== null && r >= BigInt(100) && r <= BigInt(100_000_00) ? r : null;
+}
+
+export function formatRate(rateHundredths: bigint | number | string): string {
+  const cents = typeof rateHundredths === "string" ? BigInt(Math.round(Number(rateHundredths) * 100)) : BigInt(rateHundredths);
+  return `${formatMoney(cents, "CDF")} pour 1 $`;
+}
+
+/**
+ * Conversion au taux du jour, pour un frais payé dans l'autre devise.
+ * Dollars → francs : arrondi au franc. Francs → dollars : arrondi au centime.
+ */
+export function convertCents(cents: bigint, from: Currency, to: Currency, rateHundredths: bigint): bigint {
+  if (from === to) return cents;
+  const h = BigInt(100);
+  if (from === "USD") return ((cents * rateHundredths) / h + BigInt(50)) / h * h;
+  return (cents * h * BigInt(2) + rateHundredths) / (BigInt(2) * rateHundredths);
+}

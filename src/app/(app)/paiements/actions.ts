@@ -6,7 +6,7 @@ import { sql } from "@/lib/db";
 import { requireWriteAccess } from "@/lib/auth";
 import { formAction, str, optStr, isUuid, isISODate, UserError } from "@/lib/actions";
 import { audit } from "@/lib/audit";
-import { parseAmount } from "@/lib/money";
+import { parseAmount, parseRate, type Currency } from "@/lib/money";
 import { PAYMENT_METHODS, todayISO, type PaymentMethod } from "@/lib/labels";
 import { recordPayment } from "@/lib/payments";
 
@@ -24,6 +24,10 @@ export const createPayment = formAction(async (_prev, formData) => {
   if (!(method in PAYMENT_METHODS)) throw new UserError("Choisissez le moyen de paiement.");
   if (!isISODate(date)) throw new UserError("La date du paiement n'est pas valide.");
   if (date > todayISO()) throw new UserError("La date du paiement ne peut pas être dans le futur.");
+  const paidCurrency = str(formData, "paid_currency");
+  const rateText = str(formData, "exchange_rate");
+  const rate = rateText ? parseRate(rateText) : null;
+  if (rateText && !rate) throw new UserError("Le taux du jour n'est pas valide, par exemple 2850.");
 
   const id = await recordPayment({
     schoolId: school.id,
@@ -35,6 +39,8 @@ export const createPayment = formAction(async (_prev, formData) => {
     transactionNumber: optStr(formData, "transaction_number"),
     paymentDate: date,
     comment: optStr(formData, "comment"),
+    paidCurrency: paidCurrency === "USD" || paidCurrency === "CDF" ? (paidCurrency as Currency) : undefined,
+    rate,
   });
   revalidatePath("/paiements");
   redirect(`/recus/${id}?nouveau=1`);

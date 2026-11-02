@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireSchoolUser } from "@/lib/auth";
 import { isUuid } from "@/lib/actions";
-import { getReceipt } from "@/lib/payments";
+import { sql } from "@/lib/db";
+import { getReceipt, receivedLabel } from "@/lib/payments";
 import { PAYMENT_METHODS, formatDate, studentFullName } from "@/lib/labels";
 import { formatMoney } from "@/lib/money";
 import { whatsAppLink } from "@/lib/phone";
@@ -21,13 +22,17 @@ export default async function ReceiptPage(props: PageProps<"/recus/[id]">) {
   if (!isUuid(id)) notFound();
   const r = await getReceipt(school.id, id);
   if (!r) notFound();
+  const [{ receipt_format: format }] = await sql<{ receipt_format: string }[]>`
+    select receipt_format from schools where id = ${school.id}`;
 
   const name = studentFullName(r);
   const cancelled = r.status === "cancelled";
+  const received = receivedLabel(r);
   const message =
     `${r.school_name}\nReçu N° ${r.receipt_number} du ${formatDate(r.payment_date)}\n` +
     `Élève : ${name} (${r.class_name ?? "—"})\n` +
     `Frais : ${r.fee_name}\nMontant payé : ${formatMoney(r.amount_cents, r.currency)} (${PAYMENT_METHODS[r.payment_method]})\n` +
+    (received ? `Reçu : ${received}\n` : "") +
     `Reste à payer (${r.currency}) : ${formatMoney(r.currency_remaining_cents, r.currency)}\n` +
     `Tous les reçus et le solde de votre enfant : ${await parentLink(r.parent_token)}\nMerci.`;
 
@@ -39,6 +44,7 @@ export default async function ReceiptPage(props: PageProps<"/recus/[id]">) {
     ["Frais", r.fee_name],
     ["Montant du frais", formatMoney(r.fee_amount_cents, r.currency)],
     ["Moyen de paiement", PAYMENT_METHODS[r.payment_method]],
+    ...(received ? [["Payé en", received] as [string, string]] : []),
     ...(r.transaction_number ? [["N° de transaction", r.transaction_number] as [string, string]] : []),
     ["Reçu par", r.agent_name],
   ];
@@ -47,8 +53,19 @@ export default async function ReceiptPage(props: PageProps<"/recus/[id]">) {
     <div className="mx-auto max-w-xl">
       {sp.nouveau && !cancelled && <div className="no-print mb-4"><Alert kind="success">Paiement enregistré. Le reçu est prêt.</Alert></div>}
       <div className="no-print mb-4 flex flex-wrap gap-2">
-        <a href={`/api/recus/${r.id}/pdf`} className={buttonClass("primary")} target="_blank" rel="noopener">Télécharger le PDF</a>
-        <PrintButton />
+        {format === "a4" ? (
+          <>
+            <a href={`/api/recus/${r.id}/pdf`} className={buttonClass("primary")} target="_blank" rel="noopener">Télécharger le PDF</a>
+            <PrintButton />
+          </>
+        ) : (
+          <>
+            <a href={`/api/recus/${r.id}/pdf?format=${format}`} className={buttonClass("primary")} target="_blank" rel="noopener">
+              Imprimer le ticket ({format === "ticket58" ? "58" : "80"} mm)
+            </a>
+            <a href={`/api/recus/${r.id}/pdf?format=a4`} className={buttonClass("secondary")} target="_blank" rel="noopener">PDF A4</a>
+          </>
+        )}
         {!cancelled && (
           <a href={whatsAppLink(r.parent_phone, message)} target="_blank" rel="noopener" className={buttonClass("success")}>
             Envoyer par WhatsApp

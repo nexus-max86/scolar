@@ -2,10 +2,11 @@ import { sql } from "@/lib/db";
 import { isUuid } from "@/lib/actions";
 import { getReceipt } from "@/lib/payments";
 import { receiptPdf } from "@/lib/receipt-pdf";
+import { receiptFormat } from "@/lib/receipt-format";
 import { studentByParentToken } from "@/lib/parent";
 
 /** Reçu PDF téléchargé depuis l'espace parent : seulement les reçus de cet élève. */
-export async function GET(_req: Request, ctx: RouteContext<"/p/[token]/recu/[paymentId]">) {
+export async function GET(req: Request, ctx: RouteContext<"/p/[token]/recu/[paymentId]">) {
   const { token, paymentId } = await ctx.params;
   const s = await studentByParentToken(token);
   if (!s || !isUuid(paymentId)) return new Response("Reçu introuvable", { status: 404 });
@@ -18,7 +19,8 @@ export async function GET(_req: Request, ctx: RouteContext<"/p/[token]/recu/[pay
       select logo_data, logo_mime from schools where id = ${s.school_id}`;
     logo = row ? { data: row.logo_data, mime: row.logo_mime } : null;
   }
-  const bytes = await receiptPdf(receipt, logo);
+  const format = await receiptFormat(req, null) // le parent reçoit le format A4, plus lisible sur téléphone;
+  const bytes = await receiptPdf(receipt, logo, format);
   return new Response(new Uint8Array(bytes), {
     headers: {
       "Content-Type": "application/pdf",

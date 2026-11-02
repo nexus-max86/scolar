@@ -72,6 +72,7 @@ export default async function NewPaymentPage(props: PageProps<"/paiements/nouvea
     currency: l.currency,
   }));
   const initialFee = typeof sp.frais === "string" ? sp.frais : undefined;
+  const [rate] = await sql<{ last_exchange_rate: string | null }[]>`select last_exchange_rate from schools where id = ${school.id}`;
 
   return (
     <>
@@ -95,7 +96,7 @@ export default async function NewPaymentPage(props: PageProps<"/paiements/nouvea
           </p>
           <ActionForm action={createPayment} className="grid gap-4 sm:grid-cols-3">
             <input type="hidden" name="student_id" value={student.id} />
-            <FeeAmountPicker fees={choices} initialFee={initialFee} />
+            <FeeAmountPicker fees={choices} initialFee={initialFee} lastRate={rate?.last_exchange_rate ? String(Number(rate.last_exchange_rate)) : undefined} />
             <fieldset className="sm:col-span-3">
               <legend className="mb-2 text-sm font-medium text-gray-700">Moyen de paiement *</legend>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">

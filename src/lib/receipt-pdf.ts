@@ -1,7 +1,9 @@
 import { PDFDocument, StandardFonts, degrees, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 import { formatMoney } from "./money";
 import { PAYMENT_METHODS, formatDate, studentFullName } from "./labels";
-import type { Receipt } from "./payments";
+import { receivedLabel, type Receipt } from "./payments";
+
+export type ReceiptFormat = "a4" | "ticket58" | "ticket80";
 
 const WIN_ANSI_EXTRA = "€‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜™š›œžŸ";
 
@@ -17,7 +19,12 @@ const BLUE = rgb(0.114, 0.306, 0.847);
 const GRAY = rgb(0.42, 0.45, 0.5);
 const DARK = rgb(0.07, 0.09, 0.15);
 
-export async function receiptPdf(r: Receipt, logo: { data: Buffer; mime: string } | null): Promise<Uint8Array> {
+export async function receiptPdf(
+  r: Receipt,
+  logo: { data: Buffer; mime: string } | null,
+  format: ReceiptFormat = "a4",
+): Promise<Uint8Array> {
+  if (format !== "a4") return ticketPdf(r, format === "ticket58" ? 58 : 80);
   const pdf = await PDFDocument.create();
   pdf.setTitle(`Reçu ${r.receipt_number}`);
   pdf.setProducer("Scolar");
@@ -77,6 +84,8 @@ export async function receiptPdf(r: Receipt, logo: { data: Buffer; mime: string 
   row("Montant du frais", formatMoney(r.fee_amount_cents, r.currency));
   row("Moyen de paiement", PAYMENT_METHODS[r.payment_method]);
   if (r.transaction_number) row("N° de transaction", r.transaction_number);
+  const received = receivedLabel(r);
+  if (received) row("Payé en", received);
   y -= 4;
 
   page.drawRectangle({ x: margin, y: y - 34, width: width - 2 * margin, height: 40, color: rgb(0.925, 0.992, 0.953) });
@@ -107,5 +116,116 @@ export async function receiptPdf(r: Receipt, logo: { data: Buffer; mime: string 
   text(page, footer.slice(0, 90), margin, 48, 8, font, GRAY);
   text(page, `Émis le ${formatDate(r.created_at)} via Scolar`, margin, 36, 7, font, GRAY);
 
+  return pdf.save();
+}
+
+const MM = 72 / 25.4;
+
+/**
+ * Reçu pour petite imprimante thermique (58 ou 80 mm) : une seule colonne, page à la hauteur du contenu.
+ * S'imprime depuis le téléphone (application d'impression Bluetooth) ou l'ordinateur, à 100 %.
+ */
+async function ticketPdf(r: Receipt, widthMm: 58 | 80): Promise<Uint8Array> {
+  const pdf = await PDFDocument.create();
+  pdf.setTitle(`Reçu ${r.receipt_number}`);
+  pdf.setProducer("Scolar");
+  const font = await pdf.embedFont(StandardFonts.Helvetica);
+  const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
+  const width = widthMm * MM;
+  const margin = widthMm === 58 ? 6 : 9;
+  const inner = width - 2 * margin;
+  const base = widthMm === 58 ? 7.5 : 9;
+  const black = rgb(0, 0, 0);
+
+  type Item =
+    | { kind: "text"; s: string; size: number; f: PDFFont; align: "left" | "center" | "right" }
+    | { kind: "pair"; label: string; value: string; size: number; f: PDFFont }
+    | { kind: "rule" }
+    | { kind: "space"; h: number };
+  const items: Item[] = [];
+
+  const wrap = (s: string, size: number, f: PDFFont) => {
+    const words = clean(s).split(" ");
+    const lines: string[] = [];
+    let cur = "";
+    for (const w of words) {
+      const next = cur ? `${cur} ${w}` : w;
+      if (f.widthOfTextAtSize(next, size) <= inner || !cur) cur = next;
+      else {
+        lines.push(cur);
+        cur = w;
+      }
+    }
+    if (cur) lines.push(cur);
+    return lines;
+  };
+  const line = (s: string, size = base, f = font, align: "left" | "center" | "right" = "left") =>
+    wrap(s, size, f).forEach((l) => items.push({ kind: "text", s: l, size, f, align }));
+  // Libellé à gauche, valeur à droite ; si la valeur est trop longue, elle passe à la ligne suivante.
+  const pair = (label: string, value: string, f = font, size = base) => {
+    const lw = font.widthOfTextAtSize(clean(label), size) + 6;
+    if (lw + f.widthOfTextAtSize(clean(value), size) <= inner) items.push({ kind: "pair", label, value, size, f });
+    else {
+      line(label, size, font);
+      line(value, size, f, "right");
+    }
+  };
+  const rule = () => items.push({ kind: "rule" });
+
+  line(r.school_name, base + 2, bold, "center");
+  const contact = [r.school_address, r.school_city].filter(Boolean).join(", ");
+  if (contact) line(contact, base - 1, font, "center");
+  if (r.school_phone) line(`Tél. ${r.school_phone}`, base - 1, font, "center");
+  rule();
+  line("REÇU DE PAIEMENT", base + 1, bold, "center");
+  line(`N° ${r.receipt_number}`, base, bold, "center");
+  line(formatDate(r.payment_date), base, font, "center");
+  rule();
+  pair("Élève", studentFullName(r), bold);
+  pair("Matricule", r.student_number);
+  pair("Classe", r.class_name ?? "-");
+  pair("Frais", r.fee_name);
+  pair("Moyen", PAYMENT_METHODS[r.payment_method]);
+  if (r.transaction_number) pair("Transaction", r.transaction_number);
+  const received = receivedLabel(r);
+  if (received) pair("Payé en", received);
+  rule();
+  line("MONTANT PAYÉ", base, bold, "center");
+  line(formatMoney(r.amount_cents, r.currency), base + 6, bold, "center");
+  items.push({ kind: "space", h: 3 });
+  pair("Reste sur ce frais", r.fee_remaining_cents > BigInt(0) ? formatMoney(r.fee_remaining_cents, r.currency) : "Soldé", bold);
+  pair(`Solde total (${r.currency})`, formatMoney(r.currency_remaining_cents, r.currency), bold);
+  if (r.status === "cancelled") {
+    rule();
+    line("*** PAIEMENT ANNULÉ ***", base + 1, bold, "center");
+    if (r.cancel_reason) line(`Motif : ${r.cancel_reason}`, base - 1);
+  }
+  rule();
+  line(`Reçu par : ${r.agent_name}`, base - 0.5);
+  if (r.comment) line(`Note : ${r.comment.slice(0, 120)}`, base - 1);
+  items.push({ kind: "space", h: 4 });
+  line(r.receipt_footer || "Merci pour votre paiement. Conservez ce reçu.", base - 1.5, font, "center");
+  line("Scolar", base - 2, font, "center");
+
+  const heightOf = (it: Item) =>
+    it.kind === "rule" ? 8 : it.kind === "space" ? it.h : it.size * 1.35;
+  const height = items.reduce((h, it) => h + heightOf(it), 0) + 2 * margin;
+  const page = pdf.addPage([width, height]);
+  let y = height - margin;
+  for (const it of items) {
+    const h = heightOf(it);
+    if (it.kind === "rule") {
+      page.drawLine({ start: { x: margin, y: y - 4 }, end: { x: width - margin, y: y - 4 }, thickness: 0.6, color: black, dashArray: [2, 2] });
+    } else if (it.kind === "text") {
+      const w = it.f.widthOfTextAtSize(it.s, it.size);
+      const x = it.align === "center" ? (width - w) / 2 : it.align === "right" ? width - margin - w : margin;
+      page.drawText(it.s, { x, y: y - it.size, size: it.size, font: it.f, color: black });
+    } else if (it.kind === "pair") {
+      const v = clean(it.value);
+      page.drawText(clean(it.label), { x: margin, y: y - it.size, size: it.size, font, color: black });
+      page.drawText(v, { x: width - margin - it.f.widthOfTextAtSize(v, it.size), y: y - it.size, size: it.size, font: it.f, color: black });
+    }
+    y -= h;
+  }
   return pdf.save();
 }

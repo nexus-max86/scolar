@@ -21,11 +21,11 @@ export default async function CashPage(props: PageProps<"/caisse">) {
   const byMethod = new Map<PaymentMethod, Totals>();
   const byAgent = new Map<string, Totals>();
   for (const p of payments) {
-    total[p.currency] += p.amount_cents;
+    total[p.cash_currency] += p.cash_cents;
     if (!byMethod.has(p.payment_method)) byMethod.set(p.payment_method, emptyTotals());
-    byMethod.get(p.payment_method)![p.currency] += p.amount_cents;
+    byMethod.get(p.payment_method)![p.cash_currency] += p.cash_cents;
     if (!byAgent.has(p.agent)) byAgent.set(p.agent, emptyTotals());
-    byAgent.get(p.agent)![p.currency] += p.amount_cents;
+    byAgent.get(p.agent)![p.cash_currency] += p.cash_cents;
   }
   const cash = byMethod.get("especes") ?? emptyTotals();
 
@@ -76,7 +76,7 @@ export default async function CashPage(props: PageProps<"/caisse">) {
               <Td className="font-mono text-xs">{p.receipt_number}</Td>
               <Td>{studentFullName(p)}</Td>
               <Td>{p.fee_name}</Td>
-              <Td className="font-semibold">{formatMoney(p.amount_cents, p.currency)}</Td>
+              <Td className="font-semibold">{formatMoney(p.cash_cents, p.cash_currency)}{p.cash_currency !== p.currency && <div className="text-xs font-normal text-muted">crédité {formatMoney(p.amount_cents, p.currency)}</div>}</Td>
               <Td>{PAYMENT_METHODS[p.payment_method]}{p.transaction_number ? ` · ${p.transaction_number}` : ""}</Td>
               <Td>{p.agent}</Td>
             </tr>

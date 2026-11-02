@@ -16,6 +16,8 @@ export const updateSchool = formAction(async (_prev, formData) => {
   if (!name) throw new UserError("Le nom de l'école est obligatoire.");
   if (!/^\d{4}-\d{4}$/.test(year)) throw new UserError("L'année scolaire doit avoir la forme 2026-2027.");
   if (!/^[A-Z0-9]{1,8}$/.test(prefix)) throw new UserError("Le préfixe des reçus : 1 à 8 lettres ou chiffres, sans espace.");
+  const format = str(formData, "receipt_format") || "a4";
+  if (!["a4", "ticket58", "ticket80"].includes(format)) throw new UserError("Format de reçu inconnu.");
   const logo = await readLogo(formData);
   const removeLogo = formData.get("remove_logo") === "on";
 
@@ -23,7 +25,8 @@ export const updateSchool = formAction(async (_prev, formData) => {
     update schools set name = ${name}, address = ${optStr(formData, "address")}, city = ${optStr(formData, "city")},
       phone = ${optStr(formData, "phone")}, email = ${optStr(formData, "email")},
       director_name = ${optStr(formData, "director_name")}, academic_year = ${year},
-      receipt_prefix = ${prefix}, receipt_footer = ${optStr(formData, "receipt_footer")}
+      receipt_prefix = ${prefix}, receipt_footer = ${optStr(formData, "receipt_footer")},
+      receipt_format = ${format}
       ${logo ? sql`, logo_data = ${logo.data}, logo_mime = ${logo.mime}` : removeLogo ? sql`, logo_data = null, logo_mime = null` : sql``}
     where id = ${school.id}`;
   await audit({ schoolId: school.id, userId: user.id, action: "modification_ecole", table: "schools", recordId: school.id });

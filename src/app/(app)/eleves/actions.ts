@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import ExcelJS from "exceljs";
+import { cellText, normalizeHeader, parseDate } from "@/lib/excel-read";
 import { sql } from "@/lib/db";
 import { requireWriteAccess } from "@/lib/auth";
 import { formAction, str, optStr, isUuid, isISODate, UserError } from "@/lib/actions";
@@ -114,29 +115,6 @@ const IMPORT_COLUMNS: Record<string, keyof StudentInput | "class_name"> = {
   "telephone du parent": "parent_phone",
   adresse: "address",
 };
-
-function normalizeHeader(h: string) {
-  return h.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
-}
-
-function cellText(value: ExcelJS.CellValue): string {
-  if (value === null || value === undefined) return "";
-  if (value instanceof Date) return value.toISOString().slice(0, 10);
-  if (typeof value === "object") {
-    if ("text" in value) return String(value.text).trim();
-    if ("result" in value) return cellText(value.result as ExcelJS.CellValue);
-    if ("richText" in value) return value.richText.map((r) => r.text).join("").trim();
-  }
-  return String(value).trim();
-}
-
-function parseDate(text: string): string | null {
-  if (!text) return null;
-  if (/^\d{4}-\d{2}-\d{2}$/.test(text)) return text;
-  const m = text.match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})$/);
-  if (m) return `${m[3]}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}`;
-  return null;
-}
 
 /** Import Excel : crée les classes manquantes et ignore les lignes en erreur en les signalant. */
 export const importStudents = formAction(async (_prev, formData) => {

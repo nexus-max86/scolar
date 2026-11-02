@@ -1,7 +1,7 @@
 import { sql } from "./db";
 import { audit } from "./audit";
 import { UserError } from "./actions";
-import { formatMoney, type Currency } from "./money";
+import { convertCents, formatMoney, formatRate, type Currency } from "./money";
 import type { PaymentMethod } from "./labels";
 
 export async function recordPayment(input: {
@@ -14,6 +14,11 @@ export async function recordPayment(input: {
   transactionNumber: string | null;
   paymentDate: string;
   comment: string | null;
+  /** Devise dans laquelle le parent a payé, si ce n'est pas celle du frais ; amountCents est alors dans cette devise. */
+  paidCurrency?: Currency;
+  /** Taux du jour en centièmes de franc pour 1 dollar, obligatoire si paidCurrency diffère de la devise du frais. */
+  rate?: bigint | null;
+  imported?: boolean;
 }): Promise<string> {
   return sql.begin(async (tx) => {
     // Un verrou par élève évite deux encaissements simultanés qui dépasseraient le montant dû.
@@ -43,15 +48,26 @@ export async function recordPayment(input: {
         : "Ce frais ne concerne pas la classe de cet élève.");
     }
 
+    // Paiement dans l'autre devise : on crédite le frais de l'équivalent au taux du jour.
+    const converted = input.paidCurrency !== undefined && input.paidCurrency !== fee.currency;
+    if (converted && !input.rate) throw new UserError("Indiquez le taux du jour (francs pour 1 dollar).");
+    let credited = converted ? convertCents(input.amountCents, input.paidCurrency!, fee.currency, input.rate!) : input.amountCents;
+    if (credited <= BigInt(0)) throw new UserError("Le montant converti est nul : vérifiez le montant et le taux.");
+
     const remaining = fee.amount_cents - paid;
     if (remaining <= BigInt(0)) {
       throw new UserError(fee.amount_cents === BigInt(0)
         ? `L'élève est exempté de « ${fee.name} » : rien à encaisser.`
         : `« ${fee.name} » est déjà entièrement payé pour cet élève.`);
     }
-    if (input.amountCents > remaining) {
+    // L'arrondi de conversion peut dépasser le reste d'un centime (ou d'un taux en francs) : on solde le frais.
+    const tolerance = converted ? (fee.currency === "USD" ? BigInt(1) : input.rate! / BigInt(100) + BigInt(100)) : BigInt(0);
+    if (credited > remaining && credited - remaining <= tolerance) credited = remaining;
+    if (credited > remaining) {
+      const max = converted ? convertCents(remaining, fee.currency, input.paidCurrency!, input.rate!) : remaining;
       throw new UserError(
-        `Le montant dépasse le reste à payer pour « ${fee.name} » : ${formatMoney(remaining, fee.currency)} maximum.`,
+        `Le montant dépasse le reste à payer pour « ${fee.name} » : ${formatMoney(remaining, fee.currency)} maximum` +
+          (converted ? `, soit ${formatMoney(max, input.paidCurrency!)} au taux de ${formatRate(input.rate!)}.` : "."),
       );
     }
 
@@ -62,15 +78,24 @@ export async function recordPayment(input: {
 
     const [payment] = await tx<{ id: string }[]>`
       insert into payments (school_id, student_id, fee_id, amount_cents, currency, payment_method,
-                            transaction_number, receipt_number, payment_date, recorded_by, comment)
-      values (${input.schoolId}, ${input.studentId}, ${input.feeId}, ${input.amountCents.toString()}, ${fee.currency},
+                            transaction_number, receipt_number, payment_date, recorded_by, comment,
+                            received_cents, received_currency, exchange_rate, imported)
+      values (${input.schoolId}, ${input.studentId}, ${input.feeId}, ${credited.toString()}, ${fee.currency},
               ${input.method}, ${input.transactionNumber}, ${receiptNumber}, ${input.paymentDate},
-              ${input.userId}, ${input.comment})
+              ${input.userId}, ${input.comment},
+              ${converted ? input.amountCents.toString() : null}, ${converted ? input.paidCurrency! : null},
+              ${converted ? (Number(input.rate!) / 100).toFixed(2) : null}, ${input.imported ?? false})
       returning id`;
+    if (converted) {
+      await tx`update schools set last_exchange_rate = ${(Number(input.rate!) / 100).toFixed(2)} where id = ${input.schoolId}`;
+    }
     await audit(
       {
         schoolId: input.schoolId, userId: input.userId, action: "paiement", table: "payments", recordId: payment.id,
-        details: { receipt: receiptNumber, amount: input.amountCents.toString(), currency: fee.currency },
+        details: {
+          receipt: receiptNumber, amount: credited.toString(), currency: fee.currency,
+          ...(converted ? { received: input.amountCents.toString(), received_currency: input.paidCurrency, rate: input.rate!.toString() } : {}),
+        },
       },
       tx,
     );
@@ -90,6 +115,9 @@ export type Receipt = {
   comment: string | null;
   status: "valid" | "cancelled";
   cancel_reason: string | null;
+  received_cents: bigint | null;
+  received_currency: Currency | null;
+  exchange_rate: string | null;
   fee_name: string;
   fee_amount_cents: bigint;
   fee_remaining_cents: bigint;
@@ -123,6 +151,7 @@ export async function getReceipt(schoolId: string, paymentId: string): Promise<R
   const [r] = await sql<Receipt[]>`
     select p.id, p.receipt_number, p.payment_date, p.created_at, p.amount_cents, p.currency, p.payment_method,
            p.transaction_number, p.comment, p.status, p.cancel_reason,
+           p.received_cents, p.received_currency, p.exchange_rate,
            f.name as fee_name, coalesce(o.amount_cents, f.amount_cents) as fee_amount_cents,
            (coalesce(o.amount_cents, f.amount_cents) - (
               select coalesce(sum(p2.amount_cents), 0) from payments p2
@@ -163,4 +192,10 @@ export async function getReceipt(schoolId: string, paymentId: string): Promise<R
            or (not f.archived and not f.optional and (f.class_id is null or f.class_id = st.class_id)))`;
   r.currency_remaining_cents = remaining;
   return r;
+}
+
+/** « 142 500 FC au taux de 2 850 FC pour 1 $ », quand le parent a payé dans l'autre devise. */
+export function receivedLabel(r: Pick<Receipt, "received_cents" | "received_currency" | "exchange_rate">): string | null {
+  if (!r.received_cents || !r.received_currency || !r.exchange_rate) return null;
+  return `${formatMoney(r.received_cents, r.received_currency)} au taux de ${formatRate(r.exchange_rate)}`;
 }
