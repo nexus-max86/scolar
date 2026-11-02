@@ -45,6 +45,13 @@ async function main() {
     await sql`insert into users (name, email, password_hash, role)
               values ('Équipe Scolar', ${adminEmail}, ${await bcrypt.hash(adminPassword, 10)}, 'super_admin')`;
     console.log(`✓ Compte administrateur créé : ${adminEmail}`);
+  } else if (n === 1 && adminEmail) {
+    // Changement de l'adresse de connexion du seul administrateur plateforme : le mot de passe ne change pas.
+    const [taken] = await sql`select 1 from users where lower(email) = ${adminEmail}`;
+    if (!taken) {
+      await sql`update users set email = ${adminEmail} where role = 'super_admin'`;
+      console.log(`✓ Adresse de l'administrateur changée : ${adminEmail}`);
+    }
   }
   const [demo] = await sql`select 1 from schools where is_demo limit 1`;
   if (!demo && process.env.DEMO_DISABLED !== "1") {
