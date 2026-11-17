@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Banknote, LayoutDashboard, Smartphone } from "lucide-react";
+import { ArrowRight, Banknote, FileSpreadsheet, LayoutDashboard, Smartphone } from "lucide-react";
 import { GUIDES } from "@/lib/guides";
 import { GuideShell } from "@/components/guide-ui";
 
@@ -8,7 +8,7 @@ export const metadata = {
   description: "Guides illustrés de Scolar pour les directeurs, les caissiers et les parents.",
 };
 
-const ICONS = { directeur: LayoutDashboard, caissier: Banknote, parent: Smartphone };
+const ICONS = { directeur: LayoutDashboard, caissier: Banknote, parent: Smartphone, excel: FileSpreadsheet };
 
 export default function HelpIndex() {
   return (
@@ -18,7 +18,7 @@ export default function HelpIndex() {
       <p className="mt-3 max-w-2xl text-[16px] leading-relaxed text-muted">
         Chaque guide explique Scolar écran par écran, avec des images. Choisissez celui qui correspond à votre rôle.
       </p>
-      <div className="mt-8 grid gap-4 sm:grid-cols-3">
+      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {GUIDES.map((g) => {
           const Icon = ICONS[g.slug];
           return (

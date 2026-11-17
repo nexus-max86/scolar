@@ -104,7 +104,7 @@ export function FeeAmountPicker({ fees, initialFee, lastRate }: { fees: FeeChoic
               ? credited !== null
                 ? `Crédité sur le frais : ${formatMoney(credited, feeCurrency)} (reste ${formatMoney(remainingCents ?? 0, feeCurrency)}, taux ${formatRate(rateH!)})`
                 : "Saisissez le taux pour voir le montant crédité."
-              : `Reste à payer : ${fee.remaining} ${fee.currency}`
+              : `Il reste ${formatMoney(remainingCents ?? 0, feeCurrency)} à payer sur ce frais. Modifiez le montant pour un paiement partiel.`
         }
         className={converted ? "sm:col-span-2" : undefined}
       >

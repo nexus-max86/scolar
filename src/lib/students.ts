@@ -36,3 +36,30 @@ export type StudentInput = {
   student_number: string | null;
   enrolled_at: string | null;
 };
+
+/** Nom comparable : sans accents, sans espaces doubles, en minuscules (« MUKENDI  Élodie » = « mukendi elodie »). */
+export function nameKey(...parts: (string | null | undefined)[]) {
+  return parts.filter(Boolean).join(" ").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/gi, " ").trim().toLowerCase();
+}
+
+export type SimilarStudent = { id: string; student_number: string; full: string; class_name: string | null; status: string };
+
+/** Élèves de l'école qui portent le même nom complet (ou même nom + même date de naissance). */
+export async function findSimilarStudents(
+  tx: postgres.Sql | postgres.TransactionSql,
+  schoolId: string,
+  s: { last_name: string; middle_name: string | null; first_name: string | null; birth_date?: string | null },
+  excludeId?: string,
+): Promise<SimilarStudent[]> {
+  const rows = await tx<{ id: string; student_number: string; last_name: string; middle_name: string | null; first_name: string | null;
+                          birth_date: Date | null; class_name: string | null; status: string }[]>`
+    select s.id, s.student_number, s.last_name, s.middle_name, s.first_name, s.birth_date, s.status, c.name as class_name
+    from students s left join classes c on c.id = s.class_id
+    where s.school_id = ${schoolId} and lower(s.last_name) = ${s.last_name.trim().toLowerCase()} and s.status <> 'archived'
+      ${excludeId ? tx`and s.id <> ${excludeId}` : tx``}`;
+  const key = nameKey(s.last_name, s.middle_name, s.first_name);
+  return rows
+    .filter((r) => nameKey(r.last_name, r.middle_name, r.first_name) === key ||
+      (s.birth_date && r.birth_date && new Date(r.birth_date).toISOString().slice(0, 10) === s.birth_date))
+    .map((r) => ({ id: r.id, student_number: r.student_number, full: [r.last_name, r.middle_name, r.first_name].filter(Boolean).join(" "), class_name: r.class_name, status: r.status }));
+}

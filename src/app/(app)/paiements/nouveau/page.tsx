@@ -2,13 +2,15 @@ import Link from "next/link";
 import { requireSchoolUser } from "@/lib/auth";
 import { sql } from "@/lib/db";
 import { isUuid } from "@/lib/actions";
-import { PAYMENT_METHODS, studentFullName, todayISO } from "@/lib/labels";
+import { PAYMENT_METHODS, formatDate, studentFullName, todayISO } from "@/lib/labels";
 import { centsToInput, formatMoney, formatTotals } from "@/lib/money";
 import { studentFeeLines, totalsFromLines } from "@/lib/finance";
-import { ActionForm, SubmitButton } from "@/components/forms";
+import { SubmitButton } from "@/components/forms";
+import { ConfirmPaymentForm } from "@/components/confirm-payment";
 import { Alert, Card, Field, Input, LinkButton, PageHeader, Textarea, buttonClass } from "@/components/ui";
 import { FeeAmountPicker } from "./amount-picker";
-import { createPayment } from "../actions";
+import { BatchFeePicker, type BatchFeeChoice } from "./batch-picker";
+import { createBatchPayment, createPayment, previewBatchPayment, previewPayment } from "../actions";
 
 export const metadata = { title: "Encaisser un paiement" };
 
@@ -67,11 +69,20 @@ export default async function NewPaymentPage(props: PageProps<"/paiements/nouvea
   const open = lines.filter((l) => l.remaining_cents > BigInt(0));
   const choices = open.map((l) => ({
     id: l.fee_id,
-    label: `${l.name} — reste ${formatMoney(l.remaining_cents, l.currency)}`,
+    label: `${l.name} — ${formatMoney(l.remaining_cents, l.currency)} à payer`,
     remaining: centsToInput(l.remaining_cents),
     currency: l.currency,
   }));
   const initialFee = typeof sp.frais === "string" ? sp.frais : undefined;
+  const multi = sp.plusieurs === "1" && open.length > 1;
+  const batchChoices: BatchFeeChoice[] = open.map((l) => ({
+    id: l.fee_id,
+    name: l.name,
+    remaining: l.remaining_cents.toString(),
+    currency: l.currency,
+    due: l.due_date ? new Date(l.due_date).toISOString().slice(0, 10) : null,
+    dueLabel: l.due_date ? formatDate(l.due_date) : null,
+  }));
   const [rate] = await sql<{ last_exchange_rate: string | null }[]>`select last_exchange_rate from schools where id = ${school.id}`;
 
   return (
@@ -94,9 +105,25 @@ export default async function NewPaymentPage(props: PageProps<"/paiements/nouvea
           <p className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800">
             Solde restant de l&apos;élève : <strong>{formatTotals(totals.remaining)}</strong>
           </p>
-          <ActionForm action={createPayment} className="grid gap-4 sm:grid-cols-3">
+          {open.length > 1 && (
+            <div className="mb-4 flex flex-wrap gap-2 rounded-lg bg-canvas p-1 text-sm" role="tablist">
+              <Link href={`/paiements/nouveau?eleve=${student.id}`} role="tab" aria-selected={!multi}
+                className={multi ? "rounded-md px-3 py-2 text-muted hover:text-ink" : "rounded-md bg-white px-3 py-2 font-medium text-ink shadow-sm"}>
+                Un frais
+              </Link>
+              <Link href={`/paiements/nouveau?eleve=${student.id}&plusieurs=1`} role="tab" aria-selected={multi}
+                className={multi ? "rounded-md bg-white px-3 py-2 font-medium text-ink shadow-sm" : "rounded-md px-3 py-2 text-muted hover:text-ink"}>
+                Plusieurs frais ou paiement d&apos;avance
+              </Link>
+            </div>
+          )}
+          <ConfirmPaymentForm preview={multi ? previewBatchPayment : previewPayment} create={multi ? createBatchPayment : createPayment} className="grid gap-4 sm:grid-cols-3">
             <input type="hidden" name="student_id" value={student.id} />
-            <FeeAmountPicker fees={choices} initialFee={initialFee} lastRate={rate?.last_exchange_rate ? String(Number(rate.last_exchange_rate)) : undefined} />
+            {multi ? (
+              <BatchFeePicker fees={batchChoices} today={todayISO()} lastRate={rate?.last_exchange_rate ? String(Number(rate.last_exchange_rate)) : undefined} />
+            ) : (
+              <FeeAmountPicker fees={choices} initialFee={initialFee} lastRate={rate?.last_exchange_rate ? String(Number(rate.last_exchange_rate)) : undefined} />
+            )}
             <fieldset className="sm:col-span-3">
               <legend className="mb-2 text-sm font-medium text-gray-700">Moyen de paiement *</legend>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -118,11 +145,12 @@ export default async function NewPaymentPage(props: PageProps<"/paiements/nouvea
               <Textarea name="comment" rows={2} />
             </Field>
             <div className="sm:col-span-3">
-              <SubmitButton variant="success" className="w-full sm:w-auto" pendingText="Enregistrement du paiement…">
-                Enregistrer et générer le reçu
+              <SubmitButton variant="success" className="w-full sm:w-auto" pendingText="Vérification…">
+                Vérifier le paiement
               </SubmitButton>
+              <p className="mt-2 text-xs text-muted">Un récapitulatif s&apos;affiche avant l&apos;enregistrement : rien n&apos;est enregistré tant que vous n&apos;avez pas confirmé.</p>
             </div>
-          </ActionForm>
+          </ConfirmPaymentForm>
         </Card>
       )}
     </>

@@ -9,6 +9,7 @@ import { studentFeeLines, totalsFromLines } from "@/lib/finance";
 import { PAYMENT_METHODS, formatDate, studentFullName, todayISO, type PaymentMethod } from "@/lib/labels";
 import { formatMoney, type Currency } from "@/lib/money";
 import { whatsAppLink } from "@/lib/phone";
+import { periodLabel, type PeriodCode } from "@/lib/bulletin";
 import { Badge, MoneyLines, Wordmark, buttonClass, cx } from "@/components/ui";
 
 export const metadata: Metadata = {
@@ -33,6 +34,8 @@ export default async function ParentPage(props: PageProps<"/p/[token]">) {
     siblingsOf(s),
     announcementsForStudent(s),
   ]);
+  const [bulletin] = await sql<{ bulletin_period: PeriodCode | null }[]>`
+    select c.bulletin_period from students st join classes c on c.id = st.class_id where st.id = ${s.id}`;
   // Accusé de lecture : l'école voit combien de familles ont ouvert chaque annonce.
   await markRead(s.id, news.filter((a) => !a.read_at).map((a) => a.id));
   const totals = totalsFromLines(lines);
@@ -165,6 +168,16 @@ export default async function ParentPage(props: PageProps<"/p/[token]">) {
             </ul>
           )}
         </section>
+
+        {bulletin?.bulletin_period && (
+          <Link href={`/p/${token}/bulletin`} className="flex items-center justify-between gap-3 rounded-[var(--radius-card)] border border-line bg-white px-4 py-3 hover:border-brand-200">
+            <span>
+              <span className="block text-sm font-semibold text-ink">Bulletin de {firstName}</span>
+              <span className="block text-xs text-muted">Résultats jusqu&apos;à : {periodLabel(bulletin.bulletin_period)}</span>
+            </span>
+            <span className="text-sm font-medium text-brand-700">Voir →</span>
+          </Link>
+        )}
 
         <section className="rounded-[var(--radius-card)] border border-line bg-white">
           <h2 className="border-b border-line px-4 py-3 text-sm font-semibold text-ink">Reçus</h2>

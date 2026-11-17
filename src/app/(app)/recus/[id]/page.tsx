@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { requireSchoolUser } from "@/lib/auth";
 import { isUuid } from "@/lib/actions";
 import { sql } from "@/lib/db";
-import { getReceipt, receivedLabel } from "@/lib/payments";
+import { advanceLabel, getReceipt, receivedLabel } from "@/lib/payments";
 import { PAYMENT_METHODS, formatDate, studentFullName } from "@/lib/labels";
 import { formatMoney } from "@/lib/money";
 import { whatsAppLink } from "@/lib/phone";
@@ -28,6 +28,7 @@ export default async function ReceiptPage(props: PageProps<"/recus/[id]">) {
   const name = studentFullName(r);
   const cancelled = r.status === "cancelled";
   const received = receivedLabel(r);
+  const advance = advanceLabel(r);
   const message =
     `${r.school_name}\nReçu N° ${r.receipt_number} du ${formatDate(r.payment_date)}\n` +
     `Élève : ${name} (${r.class_name ?? "—"})\n` +
@@ -44,6 +45,7 @@ export default async function ReceiptPage(props: PageProps<"/recus/[id]">) {
     ["Classe", r.class_name ?? "—"],
     ["Frais", r.fee_name],
     ["Montant du frais", formatMoney(r.fee_amount_cents, r.currency)],
+    ...(advance ? [["Échéance", advance] as [string, string]] : []),
     ["Moyen de paiement", PAYMENT_METHODS[r.payment_method]],
     ...(received ? [["Payé en", received] as [string, string]] : []),
     ...(r.transaction_number ? [["N° de transaction", r.transaction_number] as [string, string]] : []),
@@ -72,6 +74,7 @@ export default async function ReceiptPage(props: PageProps<"/recus/[id]">) {
             Envoyer par WhatsApp
           </a>
         )}
+        {r.batch_id && <LinkButton href={`/recus/lot/${r.batch_id}`} variant="secondary">Tous les reçus de ce paiement</LinkButton>}
         <LinkButton href={`/eleves/${r.student_id}`} variant="ghost">Fiche de l&apos;élève</LinkButton>
       </div>
 

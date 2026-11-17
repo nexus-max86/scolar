@@ -1,7 +1,7 @@
 import { PDFDocument, StandardFonts, degrees, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 import { formatMoney } from "./money";
 import { PAYMENT_METHODS, formatDate, studentFullName } from "./labels";
-import { receivedLabel, type Receipt } from "./payments";
+import { advanceLabel, receivedLabel, type Receipt } from "./payments";
 
 export type ReceiptFormat = "a4" | "ticket58" | "ticket80";
 
@@ -83,6 +83,8 @@ export async function receiptPdf(
   y -= 8;
   row("Frais", r.fee_name);
   row("Montant du frais", formatMoney(r.fee_amount_cents, r.currency));
+  const advance = advanceLabel(r);
+  if (advance) row("Échéance", advance);
   row("Moyen de paiement", PAYMENT_METHODS[r.payment_method]);
   if (r.transaction_number) row("N° de transaction", r.transaction_number);
   const received = receivedLabel(r);
@@ -187,6 +189,7 @@ async function ticketPdf(r: Receipt, widthMm: 58 | 80): Promise<Uint8Array> {
   pair("Code élève", r.scolar_code);
   pair("Classe", r.class_name ?? "-");
   pair("Frais", r.fee_name);
+  if (advanceLabel(r)) pair("Avance", `échéance ${formatDate(r.fee_due_date)}`);
   pair("Moyen", PAYMENT_METHODS[r.payment_method]);
   if (r.transaction_number) pair("Transaction", r.transaction_number);
   const received = receivedLabel(r);

@@ -145,6 +145,52 @@ export async function schoolBalances(
     group by a.student_id, f.currency`;
 }
 
+export type EstimateRow = { category: string; currency: Currency; due_cents: bigint; paid_cents: bigint; students: number };
+
+/**
+ * Total estimé de l'année par type de frais : pour chaque élève actif, les frais qui le concernent
+ * (classe, frais optionnels auxquels il est inscrit, réductions et exemptions comprises), et ce qui est déjà encaissé.
+ */
+export async function annualEstimate(schoolId: string, academicYear: string): Promise<EstimateRow[]> {
+  return sql<EstimateRow[]>`
+    with st as (select id, class_id from students where school_id = ${schoolId} and status = 'active'),
+    paid as (
+      select student_id, fee_id, sum(amount_cents)::bigint as paid
+      from payments where school_id = ${schoolId} and status = 'valid' group by student_id, fee_id
+    ),
+    ov as (select student_id, fee_id, amount_cents from student_fee_overrides where school_id = ${schoolId}),
+    applicable as (
+      select st.id as student_id, f.id as fee_id
+      from st join fees f on f.school_id = ${schoolId} and f.academic_year = ${academicYear} and not f.archived and not f.optional
+       and (f.class_id is null or f.class_id = st.class_id)
+      union select paid.student_id, paid.fee_id from paid join st on st.id = paid.student_id
+      union select ov.student_id, ov.fee_id from ov join st on st.id = ov.student_id
+    )
+    select f.category, f.currency,
+           sum(coalesce(o.amount_cents, f.amount_cents))::bigint as due_cents,
+           sum(least(coalesce(p.paid, 0), coalesce(o.amount_cents, f.amount_cents)))::bigint as paid_cents,
+           count(distinct a.student_id)::int as students
+    from applicable a
+    join fees f on f.id = a.fee_id and f.academic_year = ${academicYear}
+    left join paid p on p.student_id = a.student_id and p.fee_id = a.fee_id
+    left join ov o on o.student_id = a.student_id and o.fee_id = a.fee_id
+    group by f.category, f.currency
+    order by f.currency desc, sum(coalesce(o.amount_cents, f.amount_cents)) desc`;
+}
+
+/** Montants déjà encaissés pour des frais dont la date limite n'est pas encore arrivée (paiements d'avance). */
+export async function advanceTotals(schoolId: string, academicYear: string): Promise<Totals> {
+  const rows = await sql<{ currency: Currency; total: bigint }[]>`
+    select p.currency, sum(p.amount_cents)::bigint as total
+    from payments p join fees f on f.id = p.fee_id
+    where p.school_id = ${schoolId} and p.status = 'valid' and f.academic_year = ${academicYear}
+      and f.due_date is not null and f.due_date > ${todayISO()}::date
+    group by p.currency`;
+  const t = emptyTotals();
+  for (const r of rows) t[r.currency] += r.total;
+  return t;
+}
+
 export function totalsByStudent(rows: StudentBalanceRow[]) {
   const map = new Map<string, { due: Totals; paid: Totals; remaining: Totals }>();
   for (const r of rows) {

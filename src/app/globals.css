@@ -50,3 +50,18 @@ body {
     box-shadow: none !important;
   }
 }
+
+/* Bulletins : une page A4 par élève. */
+@media print {
+  @page {
+    size: A4;
+    margin: 10mm;
+  }
+  .break-after-page {
+    break-after: page;
+  }
+  .bulletin {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

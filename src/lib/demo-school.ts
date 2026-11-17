@@ -32,10 +32,10 @@ export async function resetDemoSchool(sql: postgres.Sql) {
     await tx`delete from schools where is_demo or id in (select school_id from users where lower(email) = any(${DEMO_EMAILS}))`;
     const [school] = await tx<{ id: string }[]>`
       insert into schools (name, address, city, phone, email, director_name, academic_year, receipt_prefix, receipt_footer,
-                           status, subscription_plan, subscription_end_date, is_demo)
+                           status, subscription_plan, subscription_end_date, is_demo, last_exchange_rate)
       values ('Complexe Scolaire La Victoire', 'Av. de la Paix n°12, Lingwala', 'Kinshasa', '0812 345 678',
               'contact@lavictoire.cd', 'Jean-Pierre Mukendi', ${YEAR}, 'LV',
-              'Les frais versés ne sont ni remboursables ni transférables.', 'active', 'standard', current_date + 365, true)
+              'Les frais versés ne sont ni remboursables ni transférables.', 'active', 'standard', current_date + 365, true, 2850)
       returning id`;
     const [director] = await tx<{ id: string }[]>`
       insert into users (school_id, name, email, phone, password_hash, role)

@@ -22,13 +22,16 @@ export default async function ImportPaymentsPage() {
             <li>Un élève a payé plusieurs fois ? Copiez sa ligne autant de fois que nécessaire.</li>
             <li>Laissez vides les élèves qui n&apos;ont rien payé. Moyen : espèces si la case est vide.</li>
           </ol>
-          <p className="mt-3 text-sm text-muted">Vous pouvez aussi coller vos propres colonnes dans le modèle, à condition de garder les en-têtes.</p>
+          <p className="mt-3 text-sm text-muted">
+            Vous pouvez aussi envoyer votre propre fichier si ses colonnes s&apos;appellent Matricule, Frais, Montant, Date (et si besoin Moyen, N° reçu papier).
+            Enregistrez-le au format .xlsx. <a href="/aide/excel#paiements" target="_blank" className="font-medium text-brand-600 hover:underline">Guide pas à pas</a>
+          </p>
           <a href="/api/export/modele-paiements" className={buttonClass("secondary", "mt-4")}>Télécharger le modèle Excel</a>
         </Card>
         <Card title="2. Envoyer le fichier">
           <p className="mb-3 text-sm text-gray-700">
-            Scolar vérifie tout le fichier avant d&apos;importer. Si une ligne pose problème, rien n&apos;est enregistré
-            et la liste des lignes à corriger s&apos;affiche ici.
+            Scolar vérifie tout le fichier avant d&apos;importer, y compris les doublons (même paiement deux fois, reçu papier
+            déjà repris). Si une ligne pose problème, rien n&apos;est enregistré et un tableau indique chaque ligne à corriger.
           </p>
           <ActionForm action={importPayments} resetOnSuccess>
             <Field label="Fichier Excel (.xlsx)" hint="5 Mo maximum, 3 000 paiements par import">
