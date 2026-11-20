@@ -32,10 +32,12 @@ export async function resetDemoSchool(sql: postgres.Sql) {
     await tx`delete from schools where is_demo or id in (select school_id from users where lower(email) = any(${DEMO_EMAILS}))`;
     const [school] = await tx<{ id: string }[]>`
       insert into schools (name, address, city, phone, email, director_name, academic_year, receipt_prefix, receipt_footer,
-                           status, subscription_plan, subscription_end_date, is_demo, last_exchange_rate)
+                           status, subscription_plan, subscription_end_date, is_demo, last_exchange_rate,
+                           province, commune, school_code)
       values ('Complexe Scolaire La Victoire', 'Av. de la Paix n°12, Lingwala', 'Kinshasa', '0812 345 678',
               'contact@lavictoire.cd', 'Jean-Pierre Mukendi', ${YEAR}, 'LV',
-              'Les frais versés ne sont ni remboursables ni transférables.', 'active', 'standard', current_date + 365, true, 2850)
+              'Les frais versés ne sont ni remboursables ni transférables.', 'active', 'standard', current_date + 365, true, 2850,
+              'Kinshasa-Lukunga', 'Lingwala', '1020304')
       returning id`;
     const [director] = await tx<{ id: string }[]>`
       insert into users (school_id, name, email, phone, password_hash, role)
@@ -47,7 +49,8 @@ export async function resetDemoSchool(sql: postgres.Sql) {
     const classIds: string[] = [];
     for (const [name, section] of CLASSES) {
       const [c] = await tx<{ id: string }[]>`
-        insert into classes (school_id, name, section, academic_year) values (${school.id}, ${name}, ${section}, ${YEAR}) returning id`;
+        insert into classes (school_id, name, section, academic_year, bulletin_regime)
+        values (${school.id}, ${name}, ${section}, ${YEAR}, case when ${name} ~* 'primaire' then 'trimestre' else 'semestre' end) returning id`;
       classIds.push(c.id);
     }
 
@@ -94,12 +97,12 @@ export async function resetDemoSchool(sql: postgres.Sql) {
         studentCounter++;
         const [s] = await tx<{ id: string }[]>`
           insert into students (school_id, class_id, student_number, last_name, middle_name, first_name, birth_date, gender,
-                                address, parent_name, parent_phone, enrolled_at, created_at)
+                                address, parent_name, parent_phone, enrolled_at, created_at, birth_place)
           values (${school.id}, ${classId}, ${"26" + String(studentCounter).padStart(4, "0")}, ${lastName}, ${pick(POSTNOMS)},
                   ${female ? pick(PRENOMS_F) : pick(PRENOMS_M)}, ${`${birthYear}-${String(1 + Math.floor(rand() * 12)).padStart(2, "0")}-${String(1 + Math.floor(rand() * 28)).padStart(2, "0")}`},
                   ${female ? "F" : "M"}, ${`Av. ${pick(NOMS).toLowerCase().replace(/^./, (c) => c.toUpperCase())} n°${1 + Math.floor(rand() * 90)}, ${pick(COMMUNES)}`},
                   ${parentName}, ${parentPhone},
-                  ${"2026-09-0" + (1 + Math.floor(rand() * 8))}, ${"2026-09-01"})
+                  ${"2026-09-0" + (1 + Math.floor(rand() * 8))}, ${"2026-09-01"}, ${["Kinshasa", "Kinshasa", "Kinshasa", "Matadi", "Kikwit"][studentCounter % 5]})
           returning id`;
 
         const pay = async (f: { id: string; currency: string }, cents: number, date: string) => {

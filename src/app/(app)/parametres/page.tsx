@@ -10,8 +10,10 @@ export const metadata = { title: "Paramètres" };
 export default async function SettingsPage() {
   const { school } = await requireSchoolUser(["director"]);
   const [s] = await sql<{ name: string; address: string | null; city: string | null; phone: string | null; email: string | null;
-    director_name: string | null; academic_year: string; receipt_prefix: string; receipt_footer: string | null; receipt_format: string }[]>`
-    select name, address, city, phone, email, director_name, academic_year, receipt_prefix, receipt_footer, receipt_format
+    director_name: string | null; academic_year: string; receipt_prefix: string; receipt_footer: string | null; receipt_format: string;
+    province: string | null; commune: string | null; school_code: string | null }[]>`
+    select name, address, city, phone, email, director_name, academic_year, receipt_prefix, receipt_footer, receipt_format,
+           province, commune, school_code
     from schools where id = ${school.id}`;
 
   return (
@@ -25,7 +27,10 @@ export default async function SettingsPage() {
             <Field label="Ville"><Input name="city" defaultValue={s.city ?? ""} /></Field>
             <Field label="Téléphone"><Input name="phone" defaultValue={s.phone ?? ""} /></Field>
             <Field label="E-mail"><Input name="email" type="email" defaultValue={s.email ?? ""} /></Field>
-            <Field label="Nom du directeur"><Input name="director_name" defaultValue={s.director_name ?? ""} /></Field>
+            <Field label="Nom du directeur" hint="Imprimé comme chef d'établissement"><Input name="director_name" defaultValue={s.director_name ?? ""} /></Field>
+            <Field label="Province éducationnelle" hint="En-tête du bulletin"><Input name="province" defaultValue={s.province ?? ""} placeholder="Ex. Kinshasa-Lukunga" /></Field>
+            <Field label="Commune ou territoire" hint="En-tête du bulletin"><Input name="commune" defaultValue={s.commune ?? ""} placeholder="Ex. Ngaliema" /></Field>
+            <Field label="Code de l'école" hint="Code officiel, imprimé dans les cases du bulletin"><Input name="school_code" defaultValue={s.school_code ?? ""} /></Field>
             <Field label="Année scolaire en cours *" hint="Changer d'année affiche les classes et frais de la nouvelle année">
               <Input name="academic_year" required pattern="\d{4}-\d{4}" defaultValue={s.academic_year} />
             </Field>

@@ -1,15 +1,15 @@
 import Link from "next/link";
 import { requireSchoolUser } from "@/lib/auth";
 import { sql } from "@/lib/db";
-import { periodLabel, type PeriodCode } from "@/lib/bulletin";
+import { periodLabel, type PeriodCode, type Regime } from "@/lib/bulletin";
 import { Badge, Card, LinkButton, PageHeader, Table, Td } from "@/components/ui";
 
 export const metadata = { title: "Bulletins" };
 
 export default async function BulletinsPage() {
   const { school } = await requireSchoolUser();
-  const classes = await sql<{ id: string; name: string; section: string | null; students: number; subjects: number; grades: number; bulletin_period: PeriodCode | null }[]>`
-    select c.id, c.name, c.section, c.bulletin_period,
+  const classes = await sql<{ id: string; name: string; section: string | null; students: number; subjects: number; grades: number; bulletin_period: PeriodCode | null; bulletin_regime: Regime }[]>`
+    select c.id, c.name, c.section, c.bulletin_period, c.bulletin_regime,
            (select count(*) from students s where s.class_id = c.id and s.status = 'active')::int as students,
            (select count(*) from subjects sb where sb.class_id = c.id)::int as subjects,
            (select count(*) from grades g join subjects sb on sb.id = g.subject_id where sb.class_id = c.id)::int as grades
@@ -33,7 +33,7 @@ export default async function BulletinsPage() {
               <Td className="tabular-nums">{c.students}</Td>
               <Td>{c.subjects ? <span className="tabular-nums">{c.subjects}</span> : <Badge color="orange">À définir</Badge>}</Td>
               <Td className="tabular-nums">{c.grades}</Td>
-              <Td>{c.bulletin_period ? <Badge color="green">Publié jusqu&apos;à : {periodLabel(c.bulletin_period)}</Badge> : <Badge>Non publié</Badge>}</Td>
+              <Td>{c.bulletin_period ? <Badge color="green">Publié jusqu&apos;à : {periodLabel(c.bulletin_period, c.bulletin_regime)}</Badge> : <Badge>Non publié</Badge>}</Td>
               <Td><LinkButton href={`/bulletins/${c.id}`} variant="secondary">Ouvrir</LinkButton></Td>
             </tr>
           ))}

@@ -193,11 +193,11 @@ export const GUIDES: Guide[] = [
       {
         id: "bulletins",
         title: "Les bulletins",
-        intro: "Menu **Bulletins**. Un seul modèle, au format habituel en RDC : deux semestres, avec deux périodes et un examen chacun. L'en-tête porte le nom, la ville et le logo de votre école.",
+        intro: "Menu **Bulletins**. Les bulletins suivent les modèles officiels : primaire en **trimestres** (deux périodes et un examen chacun), secondaire en **semestres**. L'en-tête officiel reprend la province, la commune et le code de l'école (menu **Paramètres**), et le lieu de naissance, le N° permanent et le N° ID de l'élève (fiche de l'élève).",
         steps: [
-          "Choisissez la classe, puis l'onglet **Cours et maxima**. Ajoutez d'un coup les **cours habituels du primaire** ou **du secondaire**, ou copiez ceux d'une autre classe. Corrigez les maxima si besoin.",
-          "Onglet **Saisir les points** : choisissez la période, remplissez la grille (une ligne par élève, une colonne par cours), puis **Enregistrer les notes**. L'examen est noté sur le double du maximum.",
-          "Onglet **Conduite et décision** : conduite, observation du titulaire et décision de fin d'année.",
+          "Choisissez la classe, puis l'onglet **Cours et maxima**. Dans **Modèle du bulletin**, choisissez trimestres ou semestres et le titre imprimé. Ajoutez d'un coup la liste du **primaire (1re et 2e année)** ou **du secondaire**, ou copiez celle d'une autre classe. Corrigez les maxima, domaines et sous-groupes si besoin ; décochez **Examen** pour un cours sans examen.",
+          "Onglet **Saisir les points** : choisissez la période, remplissez la grille (une ligne par élève, une colonne par cours, plus l'application et la conduite : E, TB, B, AB, M…), puis **Enregistrer les notes**. L'examen est noté sur le double du maximum.",
+          "Onglet **Décision de fin d'année** : passe, double ou a échoué, et les cours à repasser à l'examen de repêchage.",
           "Onglet **Résultats et impression** : pourcentages et places calculés automatiquement. Imprimez un bulletin ou toute la classe (un bulletin par page A4, ou « Enregistrer au format PDF »).",
           "Pour que les parents voient le bulletin sur leur téléphone, choisissez jusqu'à quelle période le publier, puis **Enregistrer**.",
         ],

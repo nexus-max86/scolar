@@ -35,6 +35,10 @@ export type StudentInput = {
   class_id: string | null;
   student_number: string | null;
   enrolled_at: string | null;
+  /** En-tête du bulletin officiel. */
+  birth_place: string | null;
+  perm_number: string | null;
+  national_id: string | null;
 };
 
 /** Nom comparable : sans accents, sans espaces doubles, en minuscules (« MUKENDI  Élodie » = « mukendi elodie »). */

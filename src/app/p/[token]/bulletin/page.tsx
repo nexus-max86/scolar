@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { sql } from "@/lib/db";
 import { studentByParentToken } from "@/lib/parent";
-import { classBulletins, type PeriodCode } from "@/lib/bulletin";
+import { classBulletins, type PeriodCode, type Regime } from "@/lib/bulletin";
 import { BulletinSheet, type BulletinSchool } from "@/components/bulletin-sheet";
 import { PrintButton } from "@/components/print-button";
 
@@ -18,14 +18,15 @@ export default async function ParentBulletinPage(props: PageProps<"/p/[token]/bu
   const { token } = await props.params;
   const s = await studentByParentToken(token);
   if (!s) notFound();
-  const [cls] = await sql<{ id: string; name: string; section: string | null; titular_name: string | null; bulletin_period: PeriodCode | null }[]>`
-    select c.id, c.name, c.section, c.titular_name, c.bulletin_period
+  const [cls] = await sql<{ id: string; name: string; section: string | null; bulletin_period: PeriodCode | null; bulletin_regime: Regime; bulletin_title: string | null }[]>`
+    select c.id, c.name, c.section, c.bulletin_period, c.bulletin_regime, c.bulletin_title
     from students st join classes c on c.id = st.class_id where st.id = ${s.id}`;
   if (!cls?.bulletin_period) notFound();
   const [school] = await sql<BulletinSchool[]>`
-    select id, name, city, address, phone, director_name, logo_data is not null as has_logo, academic_year
+    select id, name, city, address, phone, director_name, logo_data is not null as has_logo, academic_year,
+           province, commune, school_code
     from schools where id = ${s.school_id}`;
-  const data = await classBulletins(s.school_id, cls.id, s.academic_year, cls.bulletin_period);
+  const data = await classBulletins(s.school_id, cls.id, s.academic_year, cls.bulletin_regime, cls.bulletin_period);
   const b = data.bulletins.find((x) => x.student.id === s.id);
   if (!b) notFound();
 
@@ -36,11 +37,13 @@ export default async function ParentBulletinPage(props: PageProps<"/p/[token]/bu
         <PrintButton />
       </div>
       <div className="overflow-x-auto px-2 print:overflow-visible print:px-0">
-        <div className="min-w-[640px] print:min-w-0">
+        <div className="min-w-[760px] print:min-w-0">
           <BulletinSheet
             school={school}
             className={`${cls.name}${cls.section ? ` (${cls.section})` : ""}`}
-            titular={cls.titular_name}
+            title={cls.bulletin_title}
+            regime={data.regime}
+            columns={data.columns}
             b={b}
             ranked={data.ranked}
             logoUrl={school.has_logo ? `/p/${token}/logo` : null}

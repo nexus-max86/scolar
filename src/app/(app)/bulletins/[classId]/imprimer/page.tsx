@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { requireSchoolUser } from "@/lib/auth";
 import { sql } from "@/lib/db";
 import { isUuid } from "@/lib/actions";
-import { classBulletins } from "@/lib/bulletin";
+import { classBulletins, type Regime } from "@/lib/bulletin";
 import { BulletinSheet, type BulletinSchool } from "@/components/bulletin-sheet";
 import { PrintButton } from "@/components/print-button";
 import { Alert, LinkButton } from "@/components/ui";
@@ -15,13 +15,14 @@ export default async function PrintBulletinsPage(props: PageProps<"/bulletins/[c
   const sp = await props.searchParams;
   const { school: current } = await requireSchoolUser();
   if (!isUuid(classId)) notFound();
-  const [cls] = await sql<{ name: string; section: string | null; titular_name: string | null }[]>`
-    select name, section, titular_name from classes where id = ${classId} and school_id = ${current.id}`;
+  const [cls] = await sql<{ name: string; section: string | null; bulletin_regime: Regime; bulletin_title: string | null }[]>`
+    select name, section, bulletin_regime, bulletin_title from classes where id = ${classId} and school_id = ${current.id}`;
   if (!cls) notFound();
   const [school] = await sql<BulletinSchool[]>`
-    select id, name, city, address, phone, director_name, logo_data is not null as has_logo, academic_year
+    select id, name, city, address, phone, director_name, logo_data is not null as has_logo, academic_year,
+           province, commune, school_code
     from schools where id = ${current.id}`;
-  const data = await classBulletins(current.id, classId, current.academic_year);
+  const data = await classBulletins(current.id, classId, current.academic_year, cls.bulletin_regime);
   const only = typeof sp.eleve === "string" ? sp.eleve : null;
   const list = only ? data.bulletins.filter((b) => b.student.id === only) : data.bulletins;
   const className = `${cls.name}${cls.section ? ` (${cls.section})` : ""}`;
@@ -39,7 +40,8 @@ export default async function PrintBulletinsPage(props: PageProps<"/bulletins/[c
       <div className="space-y-6 print:space-y-0">
         {list.map((b) => (
           <div key={b.student.id} className="break-after-page rounded-[var(--radius-card)] border border-line print:rounded-none print:border-0">
-            <BulletinSheet school={school} className={className} titular={cls.titular_name} b={b} ranked={data.ranked} logoUrl={school.has_logo ? `/api/logo/${school.id}` : null} />
+            <BulletinSheet school={school} className={className} title={cls.bulletin_title} regime={data.regime} columns={data.columns}
+              b={b} ranked={data.ranked} logoUrl={school.has_logo ? `/api/logo/${school.id}` : null} />
           </div>
         ))}
       </div>

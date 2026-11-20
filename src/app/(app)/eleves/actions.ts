@@ -29,6 +29,9 @@ function readStudent(formData: FormData): StudentInput {
     class_id: classId || null,
     student_number: optStr(formData, "student_number"),
     enrolled_at: enrolled || null,
+    birth_place: optStr(formData, "birth_place"),
+    perm_number: optStr(formData, "perm_number")?.toUpperCase() ?? null,
+    national_id: optStr(formData, "national_id")?.toUpperCase() ?? null,
   };
   if (!input.last_name) throw new UserError("Le nom de l'élève est obligatoire.");
   if (input.birth_date && !isISODate(input.birth_date)) throw new UserError("La date de naissance n'est pas valide.");
@@ -66,10 +69,11 @@ export const createStudent = formAction(async (_prev, formData) => {
     if (dup) throw new UserError(`Le matricule ${number} est déjà utilisé.`);
     const [row] = await tx<{ id: string }[]>`
       insert into students (school_id, class_id, student_number, last_name, middle_name, first_name,
-                            birth_date, gender, address, parent_name, parent_phone, enrolled_at)
+                            birth_date, gender, address, parent_name, parent_phone, enrolled_at,
+                            birth_place, perm_number, national_id)
       values (${school.id}, ${s.class_id}, ${number}, ${s.last_name}, ${s.middle_name}, ${s.first_name},
               ${s.birth_date}, ${s.gender}, ${s.address}, ${s.parent_name}, ${s.parent_phone},
-              ${s.enrolled_at ?? todayISO()})
+              ${s.enrolled_at ?? todayISO()}, ${s.birth_place}, ${s.perm_number}, ${s.national_id})
       returning id`;
     await audit({ schoolId: school.id, userId: user.id, action: "creation_eleve", table: "students", recordId: row.id }, tx);
     if (formData.get("not_duplicate") === "1") {
@@ -104,6 +108,7 @@ export const updateStudent = formAction(async (_prev, formData) => {
       last_name = ${s.last_name}, middle_name = ${s.middle_name}, first_name = ${s.first_name},
       birth_date = ${s.birth_date}, gender = ${s.gender}, address = ${s.address},
       parent_name = ${s.parent_name}, parent_phone = ${s.parent_phone},
+      birth_place = ${s.birth_place}, perm_number = ${s.perm_number}, national_id = ${s.national_id},
       enrolled_at = coalesce(${s.enrolled_at}::date, enrolled_at)
     where id = ${id} and school_id = ${school.id}`;
   if (result.count === 0) throw new UserError("Élève introuvable.");
@@ -135,6 +140,9 @@ const IMPORT_COLUMNS: Record<string, keyof StudentInput | "class_name"> = {
   "nom du parent": "parent_name",
   "telephone du parent": "parent_phone",
   adresse: "address",
+  "lieu de naissance": "birth_place",
+  "n° perm": "perm_number",
+  "n° id": "national_id",
   // Intitulés fréquents dans les fichiers des écoles.
   "n° matricule": "student_number",
   "numero matricule": "student_number",
@@ -157,6 +165,16 @@ const IMPORT_COLUMNS: Record<string, keyof StudentInput | "class_name"> = {
   "tel parent": "parent_phone",
   "telephone parent": "parent_phone",
   "contact": "parent_phone",
+  "ne(e) a": "birth_place",
+  "lieu naissance": "birth_place",
+  "n° permanent": "perm_number",
+  "numero permanent": "perm_number",
+  "n perm": "perm_number",
+  "num perm": "perm_number",
+  "id": "national_id",
+  "n id": "national_id",
+  "numero id": "national_id",
+  "n° identifiant": "national_id",
 };
 
 /** Import Excel : crée les classes manquantes et ignore les lignes en erreur en les signalant. */
@@ -248,8 +266,9 @@ export const importStudents = formAction(async (_prev, formData) => {
         classId = classes.get(r.class_name.toLowerCase()) ?? null;
         if (!classId) {
           const [c] = await tx<{ id: string }[]>`
-            insert into classes (school_id, name, academic_year)
-            values (${school.id}, ${r.class_name}, ${school.academic_year}) returning id`;
+            insert into classes (school_id, name, academic_year, bulletin_regime)
+            values (${school.id}, ${r.class_name}, ${school.academic_year},
+                    case when ${r.class_name} ~* 'primaire' then 'trimestre' else 'semestre' end) returning id`;
           classId = c.id;
           classes.set(r.class_name.toLowerCase(), c.id);
         }
@@ -263,10 +282,11 @@ export const importStudents = formAction(async (_prev, formData) => {
       }
       await tx`
         insert into students (school_id, class_id, student_number, last_name, middle_name, first_name,
-                              birth_date, gender, address, parent_name, parent_phone)
+                              birth_date, gender, address, parent_name, parent_phone, birth_place, perm_number, national_id)
         values (${school.id}, ${classId}, ${number}, ${r.last_name.toUpperCase()}, ${r.middle_name?.toUpperCase() || null},
                 ${r.first_name || null}, ${birth}, ${g === "M" || g === "F" ? g : null},
-                ${r.address || null}, ${r.parent_name || null}, ${r.parent_phone || null})`;
+                ${r.address || null}, ${r.parent_name || null}, ${r.parent_phone || null},
+                ${r.birth_place || null}, ${r.perm_number?.toUpperCase() || null}, ${r.national_id?.toUpperCase() || null})`;
       seenNames.set(key, r.line);
       created++;
     }
