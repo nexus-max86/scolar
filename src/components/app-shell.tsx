@@ -8,10 +8,12 @@ import {
   Users, Wallet, X, type LucideIcon,
   CircleHelp,
   Megaphone,
+  Bell,
+  NotebookText,
 } from "lucide-react";
 import { LogoMark, cx } from "./ui";
 
-type NavItem = { href: string; label: string; icon: LucideIcon };
+type NavItem = { href: string; label: string; icon: LucideIcon; count?: number };
 
 const DAILY: NavItem[] = [
   { href: "/tableau-de-bord", label: "Tableau de bord", icon: LayoutDashboard },
@@ -22,6 +24,8 @@ const DAILY: NavItem[] = [
   { href: "/caisse", label: "Caisse du jour", icon: Wallet },
 ];
 const SETUP: NavItem[] = [
+  { href: "/alertes", label: "Alertes", icon: Bell },
+  { href: "/bulletins", label: "Bulletins", icon: NotebookText },
   { href: "/annonces", label: "Annonces", icon: Megaphone },
   { href: "/classes", label: "Classes", icon: School },
   { href: "/frais", label: "Frais scolaires", icon: Coins },
@@ -49,6 +53,11 @@ function NavLink({ item, pathname, onClick }: { item: NavItem; pathname: string;
     >
       <Icon size={18} strokeWidth={1.75} className={active ? "text-brand-600" : "text-gray-400"} aria-hidden />
       {item.label}
+      {item.count ? (
+        <span className="ml-auto min-w-5 rounded-full bg-red-600 px-1.5 text-center text-[11px] font-semibold leading-5 text-white" aria-label={`${item.count} nouvelles`}>
+          {item.count > 99 ? "99+" : item.count}
+        </span>
+      ) : null}
     </Link>
   );
 }
@@ -85,8 +94,10 @@ export function AppShell({
   roleLabel,
   logoUrl,
   logoutAction,
+  alertCount = 0,
   children,
 }: {
+  alertCount?: number;
   isDirector: boolean;
   schoolName: string;
   userName: string;
@@ -118,7 +129,9 @@ export function AppShell({
         <>
           <div className="mb-1 mt-6 px-2.5 text-xs font-medium text-muted">Gestion de l&apos;école</div>
           <div className="space-y-0.5">
-            {SETUP.map((item) => <NavLink key={item.href} item={item} pathname={pathname} onClick={onClick} />)}
+            {SETUP.map((item) => (
+              <NavLink key={item.href} item={item.href === "/alertes" ? { ...item, count: alertCount } : item} pathname={pathname} onClick={onClick} />
+            ))}
           </div>
         </>
       )}
@@ -229,7 +242,10 @@ export function AppShell({
             );
           })}
           <button onClick={() => setDrawer(true)} className="flex h-16 flex-col items-center justify-center gap-1 text-[11px] text-muted">
-            <span className="flex h-8 w-12 items-center justify-center"><Menu size={20} strokeWidth={1.75} aria-hidden /></span>
+            <span className="relative flex h-8 w-12 items-center justify-center">
+              <Menu size={20} strokeWidth={1.75} aria-hidden />
+              {isDirector && alertCount > 0 && <span className="absolute right-2.5 top-1 h-2 w-2 rounded-full bg-red-600" aria-label="Nouvelles alertes" />}
+            </span>
             Menu
           </button>
         </div>

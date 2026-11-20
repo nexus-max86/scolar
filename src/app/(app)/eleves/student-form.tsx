@@ -14,6 +14,9 @@ type Defaults = Partial<{
   class_id: string | null;
   student_number: string;
   enrolled_at: Date | string | null;
+  birth_place: string | null;
+  perm_number: string | null;
+  national_id: string | null;
 }>;
 
 function isoDate(d: Date | string | null | undefined) {
@@ -68,6 +71,15 @@ export function StudentFields({ classes, defaults = {}, edit = false }: { classe
       </Field>
       <Field label="Date d'inscription">
         <Input name="enrolled_at" type="date" defaultValue={isoDate(defaults.enrolled_at)} />
+      </Field>
+      <Field label="Lieu de naissance" hint="Imprimé sur le bulletin">
+        <Input name="birth_place" defaultValue={defaults.birth_place ?? ""} placeholder="Ex. Kinshasa" />
+      </Field>
+      <Field label="N° permanent" hint="Bulletin, si l'élève en a un">
+        <Input name="perm_number" defaultValue={defaults.perm_number ?? ""} autoCapitalize="characters" />
+      </Field>
+      <Field label="N° ID" hint="Bulletin, si l'élève en a un">
+        <Input name="national_id" defaultValue={defaults.national_id ?? ""} autoCapitalize="characters" />
       </Field>
     </div>
   );

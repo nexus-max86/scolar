@@ -3,7 +3,9 @@ import { requireSchoolUser } from "@/lib/auth";
 import { sql } from "@/lib/db";
 import { PAYMENT_METHODS, formatDate, studentFullName, todayISO } from "@/lib/labels";
 import { formatTotals, emptyTotals, formatMoney, type Currency } from "@/lib/money";
-import { schoolBalances, sumTotals } from "@/lib/finance";
+import { advanceTotals, annualEstimate, schoolBalances, sumTotals } from "@/lib/finance";
+import { unreadAlertCount } from "@/lib/alerts";
+import { FEE_CATEGORIES } from "@/lib/labels";
 import { listPayments } from "@/lib/reports";
 import { BarChart } from "@/components/bar-chart";
 import { SetupChecklist } from "@/components/setup-checklist";
@@ -18,7 +20,8 @@ export default async function DashboardPage(props: PageProps<"/tableau-de-bord">
   const { user, school } = await requireSchoolUser();
   const today = todayISO();
 
-  const [[counts], balances, overdue, todayPayments, monthly, perClass, recentStudents, recentPayments] = await Promise.all([
+  const isDirectorRole = user.role === "director";
+  const [[counts], balances, overdue, todayPayments, monthly, perClass, recentStudents, recentPayments, estimate, advance, alerts] = await Promise.all([
     sql<{ students: number; classes: number; staff: number; fees: number; payments: number }[]>`
       select (select count(*) from students where school_id = ${school.id} and status = 'active')::int as students,
              (select count(*) from classes where school_id = ${school.id} and academic_year = ${school.academic_year})::int as classes,
@@ -44,7 +47,12 @@ export default async function DashboardPage(props: PageProps<"/tableau-de-bord">
       from students s left join classes c on c.id = s.class_id
       where s.school_id = ${school.id} order by s.created_at desc limit 5`,
     listPayments(school.id, { from: "2000-01-01", to: today, limit: 6 }),
+    annualEstimate(school.id, school.academic_year),
+    advanceTotals(school.id, school.academic_year),
+    isDirectorRole ? unreadAlertCount(school.id) : Promise.resolve(0),
   ]);
+  const expected = emptyTotals();
+  for (const e of estimate) expected[e.currency] += e.due_cents;
 
   const collected = sumTotals(balances, "paid_cents");
   const remaining = sumTotals(balances, "remaining_cents");
@@ -71,7 +79,7 @@ export default async function DashboardPage(props: PageProps<"/tableau-de-bord">
     }));
   const currencies: Currency[] = monthly.some((r) => r.currency === "CDF") ? ["USD", "CDF"] : ["USD"];
 
-  const isDirector = user.role === "director";
+  const isDirector = isDirectorRole;
   const firstName = user.name.split(" ")[0];
   const dateLabel = new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", timeZone: "Africa/Kinshasa" });
 
@@ -93,6 +101,13 @@ export default async function DashboardPage(props: PageProps<"/tableau-de-bord">
         />
       )}
 
+      {alerts > 0 && (
+        <Link href="/alertes" className="mb-4 flex items-center justify-between gap-3 rounded-[var(--radius-card)] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 transition-colors hover:border-red-300">
+          <span><strong>{alerts} alerte{alerts > 1 ? "s" : ""}</strong> à vérifier : import, doublon, montant ou taux inhabituel.</span>
+          <span className="shrink-0 font-semibold">Voir →</span>
+        </Link>
+      )}
+
       {lateIds.size > 0 && (
         <Link href="/impayes?echus=1" className="mb-4 flex items-center justify-between gap-3 rounded-[var(--radius-card)] border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 transition-colors hover:border-amber-300">
           <span>
@@ -108,6 +123,57 @@ export default async function DashboardPage(props: PageProps<"/tableau-de-bord">
         <StatCard label="Reste à percevoir" value={<MoneyLines totals={remaining} />} tone="red" hint={`${debtors} élève${debtors > 1 ? "s" : ""} concerné${debtors > 1 ? "s" : ""}`} href="/impayes" />
         <StatCard label="Élèves actifs" value={counts.students} hint={`${counts.classes} classe${counts.classes > 1 ? "s" : ""}`} href="/eleves" />
       </div>
+
+      {estimate.length > 0 && (
+        <Card
+          title={`Total estimé de l'année ${school.academic_year}`}
+          className="mb-6"
+          action={<span className="text-xs text-muted">{counts.students} élève{counts.students > 1 ? "s" : ""} inscrit{counts.students > 1 ? "s" : ""}</span>}
+        >
+          <p className="mb-3 text-sm text-muted">
+            Ce que l&apos;école doit recevoir sur l&apos;année si chaque élève inscrit paie ses frais (réductions et frais optionnels compris) :{" "}
+            <strong className="text-ink">{formatTotals(expected)}</strong>.
+            {(advance.USD > BigInt(0) || advance.CDF > BigInt(0)) && <> Dont <strong className="text-ink">{formatTotals(advance)}</strong> déjà payés d&apos;avance.</>}
+          </p>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="border-b border-line text-left text-xs text-muted">
+                  <th className="py-2 pr-4 font-medium">Type de frais</th>
+                  <th className="py-2 pr-4 text-right font-medium">Attendu</th>
+                  <th className="py-2 pr-4 text-right font-medium">Encaissé</th>
+                  <th className="py-2 pr-4 text-right font-medium">Reste</th>
+                  <th className="w-40 py-2 font-medium">Progression</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-line">
+                {estimate.map((e) => {
+                  const pct = e.due_cents > BigInt(0) ? Number((e.paid_cents * BigInt(1000)) / e.due_cents) / 10 : 0;
+                  return (
+                    <tr key={`${e.category}-${e.currency}`}>
+                      <td className="py-2.5 pr-4">
+                        <div className="font-medium">{FEE_CATEGORIES[e.category as keyof typeof FEE_CATEGORIES] ?? e.category}</div>
+                        <div className="text-xs text-muted">{e.students} élève{e.students > 1 ? "s" : ""}</div>
+                      </td>
+                      <td className="whitespace-nowrap py-2.5 pr-4 text-right tabular-nums">{formatMoney(e.due_cents, e.currency)}</td>
+                      <td className="whitespace-nowrap py-2.5 pr-4 text-right tabular-nums text-green-800">{formatMoney(e.paid_cents, e.currency)}</td>
+                      <td className="whitespace-nowrap py-2.5 pr-4 text-right tabular-nums text-red-700">{formatMoney(e.due_cents - e.paid_cents, e.currency)}</td>
+                      <td className="py-2.5">
+                        <div className="flex items-center gap-2">
+                          <div className="h-2 flex-1 overflow-hidden rounded-full bg-gray-100">
+                            <div className="h-full rounded-full bg-green-600" style={{ width: `${Math.min(pct, 100)}%` }} />
+                          </div>
+                          <span className="w-12 text-right text-xs tabular-nums text-muted">{pct.toLocaleString("fr-FR")} %</span>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
 
       <div className="mb-6 grid gap-4 lg:grid-cols-2">
         {currencies.map((c) => (

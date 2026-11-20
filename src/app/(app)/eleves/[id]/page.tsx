@@ -27,7 +27,8 @@ export default async function StudentPage(props: PageProps<"/eleves/[id]">) {
     { id: string; student_number: string; scolar_code: string; last_name: string; middle_name: string | null; first_name: string | null;
       birth_date: Date | null; gender: string | null; address: string | null; parent_name: string | null;
       parent_phone: string | null; status: keyof typeof STUDENT_STATUS; enrolled_at: Date; parent_token: string;
-      class_name: string | null; class_section: string | null }[]
+      class_name: string | null; class_section: string | null;
+      birth_place: string | null; perm_number: string | null; national_id: string | null }[]
   >`
     select s.*, c.name as class_name, c.section as class_section
     from students s left join classes c on c.id = s.class_id
@@ -164,7 +165,9 @@ export default async function StudentPage(props: PageProps<"/eleves/[id]">) {
           <dl className="space-y-2 text-sm">
             {[
               ["Sexe", student.gender === "M" ? "Masculin" : student.gender === "F" ? "Féminin" : "—"],
-              ["Date de naissance", formatDate(student.birth_date)],
+              ["Naissance", [student.birth_place, formatDate(student.birth_date)].filter((v) => v && v !== "—").join(", ") || "—"],
+              ...(student.perm_number ? [["N° permanent", student.perm_number]] : []),
+              ...(student.national_id ? [["N° ID", student.national_id]] : []),
               ["Parent / tuteur", student.parent_name ?? "—"],
               ["Téléphone parent", student.parent_phone ?? "—"],
               ["Adresse", student.address ?? "—"],

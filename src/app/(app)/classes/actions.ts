@@ -24,8 +24,10 @@ export const saveClass = formAction(async (_prev, formData) => {
       await audit({ schoolId: school.id, userId: user.id, action: "modification_classe", table: "classes", recordId: id });
     } else {
       const [c] = await sql<{ id: string }[]>`
-        insert into classes (school_id, name, section, academic_year)
-        values (${school.id}, ${name}, ${section}, ${school.academic_year}) returning id`;
+        insert into classes (school_id, name, section, academic_year, bulletin_regime)
+        values (${school.id}, ${name}, ${section}, ${school.academic_year},
+                -- Bulletin officiel : trimestres au primaire, semestres ailleurs (modifiable par classe).
+                case when ${name} ~* 'primaire' then 'trimestre' else 'semestre' end) returning id`;
       await audit({ schoolId: school.id, userId: user.id, action: "creation_classe", table: "classes", recordId: c.id });
     }
   } catch (err) {

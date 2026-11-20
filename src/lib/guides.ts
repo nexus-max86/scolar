@@ -15,7 +15,7 @@ export type GuideSection = {
 };
 
 export type Guide = {
-  slug: "directeur" | "caissier" | "parent";
+  slug: "directeur" | "caissier" | "parent" | "excel";
   title: string;
   audience: string;
   summary: string;
@@ -60,6 +60,8 @@ export const GUIDES: Guide[] = [
           "**Encaissé aujourd'hui** et **Encaissé cette année**, en dollars et en francs, toujours séparés.",
           "**Reste à percevoir** : tout ce que les parents doivent encore.",
           "Un bandeau orange signale les élèves dont la date limite est dépassée. Touchez-le pour les relancer.",
+          "**Total estimé de l'année** : ce que l'école doit recevoir si chaque élève inscrit paie tout, par type de frais (minerval, transport, examens…), avec ce qui est déjà encaissé et la progression.",
+          "Un bandeau rouge signale les **alertes** à vérifier (voir plus bas).",
           "Tant que l'école n'est pas complètement installée, la carte **Mettre l'école en route** indique l'étape suivante.",
         ],
         image: { file: "tableau-de-bord", alt: "Tableau de bord du directeur" },
@@ -96,8 +98,9 @@ export const GUIDES: Guide[] = [
         steps: [
           "**Un par un** : menu **Élèves**, puis **Inscrire un élève**. Le matricule est donné automatiquement si vous le laissez vide.",
           "Saisissez toujours le **téléphone du parent** : il sert pour les reçus WhatsApp, les rappels et l'espace parent.",
-          "**Depuis Excel** : menu **Élèves**, puis **Importer Excel**. Téléchargez le modèle, remplissez une ligne par élève, puis envoyez le fichier.",
-          "Si une ligne contient une erreur, Scolar n'importe rien et indique le numéro de la ligne à corriger.",
+          "**Depuis Excel** : menu **Élèves**, puis **Importer Excel**. Vous pouvez envoyer le fichier que l'école utilise déjà : le guide « Importer vos fichiers Excel » explique comment, pas à pas.",
+          "Après l'envoi, un tableau liste les lignes non importées (nom manquant, élève déjà inscrit, ligne en double…) et ce qu'il faut corriger.",
+          "Scolar vous prévient aussi quand vous inscrivez un élève qui porte le même nom qu'un élève déjà inscrit : cela évite les doublons.",
         ],
         image: { file: "import-eleves", alt: "Import des élèves depuis Excel" },
       },
@@ -168,9 +171,37 @@ export const GUIDES: Guide[] = [
           "Menu **Paiements**, puis **Reprendre des paiements**.",
           "Téléchargez le modèle Excel : il contient déjà la liste de vos élèves et vos frais.",
           "Pour chaque paiement reçu, remplissez le frais, le montant, la date, le moyen et le numéro du reçu papier.",
-          "Envoyez le fichier. Si une ligne est fausse, rien n'est importé et Scolar indique la ligne à corriger.",
+          "Envoyez le fichier. Si une ligne est fausse, rien n'est importé et un tableau indique chaque ligne à corriger et quoi faire.",
+          "Un fichier envoyé deux fois ne crée pas de doublons : Scolar reconnaît les paiements et les numéros de reçus papier déjà repris.",
         ],
         image: { file: "reprise-paiements", alt: "Page de reprise des paiements" },
+      },
+      {
+        id: "alertes",
+        title: "Les alertes",
+        intro: "Menu **Alertes**. Scolar y note tout ce qui mérite un coup d'œil du directeur. Le nombre d'alertes nouvelles s'affiche dans le menu.",
+        points: [
+          "**Import Excel** : un fichier d'élèves ou de paiements avait des lignes en erreur.",
+          "**Doublon** : un paiement encaissé deux fois le même jour pour le même frais, ou un élève inscrit avec le même nom qu'un autre. Le caissier a dû confirmer.",
+          "**Montant ou taux inhabituel** : un très petit montant (un zéro oublié ?) ou un taux du jour très différent du dernier.",
+          "**Date ancienne** : un paiement enregistré avec une date de plus d'un mois.",
+          "**Erreur** : une opération qui n'a pas abouti. Rien n'a été enregistré ; si cela se répète, contactez Scolar avec l'heure de l'alerte.",
+          "À droite, Scolar liste aussi les **élèves** et les **paiements en double possibles** de toute l'école.",
+        ],
+        tip: "Touchez **Voir** pour ouvrir le reçu ou la fiche concernée, puis **Marquer comme vu**.",
+      },
+      {
+        id: "bulletins",
+        title: "Les bulletins",
+        intro: "Menu **Bulletins**. Les bulletins suivent les modèles officiels : primaire en **trimestres** (deux périodes et un examen chacun), secondaire en **semestres**. L'en-tête officiel reprend la province, la commune et le code de l'école (menu **Paramètres**), et le lieu de naissance, le N° permanent et le N° ID de l'élève (fiche de l'élève).",
+        steps: [
+          "Choisissez la classe, puis l'onglet **Cours et maxima**. Dans **Modèle du bulletin**, choisissez trimestres ou semestres et le titre imprimé. Ajoutez d'un coup la liste du **primaire (1re et 2e année)** ou **du secondaire**, ou copiez celle d'une autre classe. Corrigez les maxima, domaines et sous-groupes si besoin ; décochez **Examen** pour un cours sans examen.",
+          "Onglet **Saisir les points** : choisissez la période, remplissez la grille (une ligne par élève, une colonne par cours, plus l'application et la conduite : E, TB, B, AB, M…), puis **Enregistrer les notes**. L'examen est noté sur le double du maximum.",
+          "Onglet **Décision de fin d'année** : passe, double ou a échoué, et les cours à repasser à l'examen de repêchage.",
+          "Onglet **Résultats et impression** : pourcentages et places calculés automatiquement. Imprimez un bulletin ou toute la classe (un bulletin par page A4, ou « Enregistrer au format PDF »).",
+          "Pour que les parents voient le bulletin sur leur téléphone, choisissez jusqu'à quelle période le publier, puis **Enregistrer**.",
+        ],
+        tip: "Une note plus grande que le maximum est refusée : la grille garde vos saisies et indique la case à corriger.",
       },
       {
         id: "utilisateurs",
@@ -295,11 +326,25 @@ export const GUIDES: Guide[] = [
           "Choisissez le **frais payé** : le montant se remplit avec ce qui reste à payer sur ce frais.",
           "Si le parent paie seulement une partie, corrigez le montant.",
           "Choisissez le moyen de paiement : espèces, M-Pesa, Airtel Money, Orange Money, banque…",
-          "Pour le Mobile Money, saisissez le numéro de transaction reçu par SMS.",
-          "Touchez **Enregistrer et générer le reçu**.",
+          "Pour le Mobile Money, saisissez le numéro de transaction reçu par SMS. Un même numéro ne peut pas servir deux fois.",
+          "Touchez **Vérifier le paiement**. Un récapitulatif s'affiche : élève, frais, montant, ce qui restera à payer. Relisez-le avec le parent.",
+          "Lisez les mises en garde en couleur : **doublon possible** (ce frais a déjà été payé aujourd'hui), montant très faible, taux inhabituel, date ancienne.",
+          "Touchez **Confirmer et enregistrer** : le reçu s'affiche. **Corriger** permet de revenir au formulaire sans rien enregistrer.",
         ],
         image: { file: "m-encaisser", alt: "Formulaire d'encaissement sur téléphone" },
-        tip: "Scolar refuse un montant plus grand que ce qui reste à payer. Vérifiez alors le frais choisi.",
+        tip: "En cas de doublon possible, il faut cocher « Je confirme que le parent paie une deuxième fois ». Le directeur en est averti.",
+      },
+      {
+        id: "avance",
+        title: "Payer plusieurs frais ou payer d'avance",
+        intro: "Le parent veut régler plusieurs mois, le trimestre ou toute l'année en une fois.",
+        steps: [
+          "Sur l'écran d'encaissement, touchez **Plusieurs frais ou paiement d'avance**.",
+          "Cochez les frais payés, ou touchez **+ les 3 prochains frais** ou **Toute l'année**. Les frais « à venir » ne sont pas encore dus : ils sont payés d'avance.",
+          "Choisissez la devise du parent (et le taux du jour s'il paie dans l'autre devise). Le total à recevoir s'affiche.",
+          "**Vérifier le paiement**, puis **Confirmer et enregistrer**. Chaque frais reçoit son reçu ; une page les regroupe pour les imprimer ou les envoyer par WhatsApp.",
+        ],
+        tip: "Sur le reçu, la mention « Payé d'avance » indique la date limite du frais.",
       },
       {
         id: "francs",
@@ -428,6 +473,93 @@ export const GUIDES: Guide[] = [
           "Chaque lien ne montre que votre enfant. Personne d'autre ne peut voir vos paiements sans ce lien.",
           "Si le lien a circulé, demandez à l'école de le changer : l'ancien ne fonctionnera plus et vous recevrez le nouveau.",
         ],
+      },
+    ],
+  },
+  {
+    slug: "excel",
+    title: "Importer vos fichiers Excel",
+    audience: "Directeur, secrétaire",
+    summary: "Mettre dans Scolar les élèves et les paiements que l'école a déjà dans ses fichiers Excel, sans tout ressaisir.",
+    sections: [
+      {
+        id: "quel-fichier",
+        title: "Quel fichier envoyer ?",
+        intro: "Scolar lit les fichiers Excel au format **.xlsx**, jusqu'à 2 000 élèves ou 3 000 paiements par envoi.",
+        points: [
+          "La **première ligne** doit contenir les titres des colonnes (Nom, Postnom, Prénom, Classe…). Les données commencent à la ligne 2.",
+          "**Une ligne par élève** (ou par paiement). Pas de lignes de total, pas de cellules fusionnées.",
+          "Seule la colonne **Nom** est obligatoire pour les élèves. Les autres colonnes sont lues si elles existent, dans n'importe quel ordre.",
+          "Votre fichier a plusieurs feuilles ? Scolar lit la **première feuille** : placez-y la liste des élèves.",
+        ],
+      },
+      {
+        id: "titres",
+        title: "Les titres de colonnes reconnus",
+        intro: "Vous pouvez garder vos propres titres s'ils ressemblent à ceux-ci (majuscules et accents sans importance) :",
+        points: [
+          "**Nom** : Nom, Noms, Nom de l'élève.",
+          "**Postnom** : Postnom, Post-nom. **Prénom** : Prénom, Prénoms.",
+          "**Sexe** : Sexe, Genre (M ou F). **Date de naissance** : Date de naissance, Né(e) le (écrite comme 14/03/2014).",
+          "**Classe** : Classe, Niveau. Les classes qui n'existent pas encore sont créées.",
+          "**Parent** : Nom du parent, Parent, Tuteur. **Téléphone** : Téléphone du parent, Téléphone, Tél, Contact.",
+          "**Matricule** : Matricule, N° matricule. Laissez vide : Scolar en donne un.",
+        ],
+        tip: "Si un titre n'est pas reconnu, renommez-le simplement dans votre fichier, ou copiez la colonne dans le modèle Scolar.",
+      },
+      {
+        id: "depuis-ordinateur",
+        title: "Préparer le fichier sur l'ordinateur",
+        steps: [
+          "Ouvrez votre fichier habituel dans Excel.",
+          "Vérifiez la première ligne : un titre par colonne, comme ci-dessus. Supprimez les lignes vides ou de titre au-dessus.",
+          "Votre fichier est en **.xls** (ancien Excel) ou **.csv** ? Menu **Fichier**, **Enregistrer sous**, choisissez **Classeur Excel (*.xlsx)**, puis **Enregistrer**.",
+          "Fermez le fichier avant de l'envoyer.",
+          "Dans Scolar : menu **Élèves**, **Importer Excel**, touchez **Choisir un fichier**, sélectionnez votre fichier, puis **Importer les élèves**.",
+        ],
+        image: { file: "import-eleves", alt: "Page d'import des élèves" },
+      },
+      {
+        id: "depuis-telephone",
+        title: "Depuis un téléphone ou Google Sheets",
+        steps: [
+          "Dans Google Sheets : **Fichier**, **Télécharger**, **Microsoft Excel (.xlsx)**.",
+          "Dans WPS Office : **Enregistrer sous**, format **.xlsx**.",
+          "Puis dans Scolar, **Importer Excel** et choisissez le fichier dans les Téléchargements.",
+        ],
+      },
+      {
+        id: "erreurs",
+        title: "Lire le rapport d'erreurs",
+        intro: "Après l'envoi, Scolar affiche ce qui a été importé et un tableau des lignes à corriger.",
+        points: [
+          "Chaque ligne du tableau indique le **numéro de ligne** de votre fichier, le **problème** et **que faire**.",
+          "**Élèves** : les lignes correctes sont importées ; les autres sont ignorées. Corrigez-les et renvoyez **le même fichier** : les élèves déjà importés sont reconnus et ne sont pas créés deux fois.",
+          "**Paiements** : si une seule ligne est fausse, rien n'est importé. Corrigez puis renvoyez le fichier complet.",
+          "Le directeur retrouve aussi ces rapports dans le menu **Alertes**.",
+        ],
+      },
+      {
+        id: "doublons",
+        title: "Doublons : ce que Scolar vérifie",
+        points: [
+          "Le même élève deux fois dans le fichier, ou déjà inscrit dans Scolar (même nom complet).",
+          "Deux élèves avec le même matricule.",
+          "Le même paiement deux fois (même élève, frais, montant et date), ou déjà repris lors d'un envoi précédent.",
+          "Le même numéro de reçu papier sur deux lignes.",
+        ],
+        tip: "Deux enfants différents portent le même nom ? Inscrivez le second à la main : Scolar vous demandera de confirmer que ce n'est pas un doublon.",
+      },
+      {
+        id: "paiements",
+        title: "Reprendre les paiements déjà reçus",
+        steps: [
+          "Importez d'abord les élèves et créez les frais.",
+          "Menu **Paiements**, **Reprendre des paiements**, puis **Télécharger le modèle** : il contient vos élèves et vos frais.",
+          "Une ligne par paiement : matricule, frais (choisi dans la liste), montant (sans $ ni FC), date (15/09/2026), moyen, n° du reçu papier.",
+          "Envoyez le fichier. Les soldes des élèves sont à jour immédiatement.",
+        ],
+        image: { file: "reprise-paiements", alt: "Page de reprise des paiements" },
       },
     ],
   },

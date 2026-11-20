@@ -6,6 +6,7 @@ import { logout } from "../(auth)/actions";
 import { DemoTour } from "@/components/demo-tour";
 import { demoShowcase, tourSteps } from "@/lib/demo";
 import { leaveDemo } from "../demo/actions";
+import { unreadAlertCount } from "@/lib/alerts";
 
 function daysLeft(end: Date | null) {
   if (!end) return null;
@@ -51,6 +52,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         roleLabel={ROLE_LABELS[user.role]}
         logoUrl={school.has_logo ? `/api/logo/${school.id}` : null}
         logoutAction={logout}
+        alertCount={user.role === "director" ? await unreadAlertCount(school.id) : 0}
       >
         {children}
       </AppShell>

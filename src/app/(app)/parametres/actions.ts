@@ -25,6 +25,8 @@ export const updateSchool = formAction(async (_prev, formData) => {
     update schools set name = ${name}, address = ${optStr(formData, "address")}, city = ${optStr(formData, "city")},
       phone = ${optStr(formData, "phone")}, email = ${optStr(formData, "email")},
       director_name = ${optStr(formData, "director_name")}, academic_year = ${year},
+      province = ${optStr(formData, "province")}, commune = ${optStr(formData, "commune")},
+      school_code = ${optStr(formData, "school_code")?.toUpperCase() ?? null},
       receipt_prefix = ${prefix}, receipt_footer = ${optStr(formData, "receipt_footer")},
       receipt_format = ${format}
       ${logo ? sql`, logo_data = ${logo.data}, logo_mime = ${logo.mime}` : removeLogo ? sql`, logo_data = null, logo_mime = null` : sql``}
